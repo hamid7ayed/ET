@@ -6,6 +6,11 @@
 <meta name="theme-color" content="#0f1117"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="سلف"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png"/>
+<link rel="apple-touch-icon" sizes="512x512" href="icon-512.png"/>
 <title>متتبع السلف | Employee Tracker</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -165,8 +170,13 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
     <div class="filter-row">
       <select id="dash-site-filter" onchange="loadDashboard()"><option value="ALL">كل المواقع / All Sites</option></select>
     </div>
-    <div id="dash-stats" class="stat-row"></div>
-    <div id="dash-table"></div>
+    <!-- Export / Share row -->
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-sm btn-ghost" style="flex:1" onclick="exportCSV()">📥 تصدير CSV</button>
+      <button class="btn btn-sm btn-ghost" style="flex:1" onclick="shareWhatsApp()">📲 واتساب</button>
+      <button class="btn btn-sm btn-ghost" style="flex:1" onclick="printDashboard()">🖨️ طباعة</button>
+    </div>
+    <div id="dash-content"></div>
   </div>
 
   <div id="tab-sites" class="content" style="display:none">
@@ -228,7 +238,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
 <div id="toast"></div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxChcQJSJ3tdVsChFQQ3eqoS5jNOCJuFkXsMsGFWF1qWneZxhnxiK_n5NXRFFw974iapg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycby568X_SEm5X-1unKsAlfYdhNcER5yUE0uRrCp6pMbMuaI0J1EhgY7fquDaZKzibQ_AXg/exec';
 
 // ── STATE ──────────────────────────────────────
 let S = {
@@ -584,33 +594,201 @@ function updateDashMonthLabel(){const el=document.getElementById('dash-month-lab
 function dashPrevMonth(){S.dashMonth--;if(S.dashMonth===0){S.dashMonth=12;S.dashYear--;}updateDashMonthLabel();loadDashboard();}
 function dashNextMonth(){S.dashMonth++;if(S.dashMonth===13){S.dashMonth=1;S.dashYear++;}updateDashMonthLabel();loadDashboard();}
 
+// cached dashboard data for export/share
+let dashData = null;
+
 async function loadDashboard() {
-  document.getElementById('dash-stats').innerHTML='<div class="loader" style="grid-column:1/-1"><div class="spinner"></div></div>';
-  document.getElementById('dash-table').innerHTML='';
+  document.getElementById('dash-content').innerHTML='<div class="loader"><div class="spinner"></div> جار التحميل...</div>';
   const site=document.getElementById('dash-site-filter').value;
-  const res=await api({action:'getDashboard',month:S.dashMonth,year:S.dashYear,site});
+  const res=await api({action:'getFullDashboard',month:S.dashMonth,year:S.dashYear,site});
   if(!res.success){showToast(res.error,'error');return;}
+  dashData = res;
   const st=res.stats;
+
+  // Rebuild site filter
   const sites=[...new Set(res.summary.map(e=>e.site))].filter(Boolean);
   const sf=document.getElementById('dash-site-filter');
   const cur=sf.value;
-  sf.innerHTML='<option value="ALL">كل المواقع / All Sites</option>'+sites.map(s=>`<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
-  document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-value">${st.totalEmployees}</div><div class="stat-label">إجمالي الموظفين</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${st.withDues}</div><div class="stat-label">عليهم مستحقات</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--warn);font-size:13px">${formatSAR(st.totalOutstanding)}</div><div class="stat-label">إجمالي المستحقات</div></div>`;
-  if(!res.summary.length){document.getElementById('dash-table').innerHTML='<div class="empty">لا توجد بيانات</div>';return;}
-  document.getElementById('dash-table').innerHTML=`
-    <div class="dash-table">
-      <div class="dash-table-header"><div>الموظف</div><div style="text-align:center">سلف</div><div style="text-align:center">مصاريف</div><div style="text-align:center">صافي</div></div>
-      ${res.summary.map(e=>`
-        <div class="dash-row" onclick="openEmployee('${e.iqamaNo}')">
-          <div><div class="dname">${e.name}</div><div class="diqama">${e.iqamaNo}</div><div class="dsite">${e.site}</div></div>
-          <div class="mono">${formatSAR(e.advances)}</div>
-          <div class="mono">${formatSAR(e.expenses)}</div>
-          <div class="mono ${e.totalDues>0?'danger':'clear'}">${formatSAR(e.totalDues)}</div>
-        </div>`).join('')}
+  sf.innerHTML='<option value="ALL">كل المواقع / All Sites</option>'+
+    sites.map(s=>`<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+
+  const MONTHS=['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+  // Alert bar
+  const alerts=[];
+  if(st.unpaidCount>0) alerts.push(`⚠️ ${st.unpaidCount} موظف لم يُصرف راتبه هذا الشهر`);
+  if(st.riskCount>0)   alerts.push(`🚨 ${st.riskCount} موظف مستحقاته تتجاوز راتبه`);
+  const alertHtml = alerts.length ? `
+    <div style="background:rgba(255,178,66,0.12);border:1px solid rgba(255,178,66,0.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:var(--warn)">
+      ${alerts.join('<br>')}
+    </div>` : '';
+
+  // Top stats (2 per row)
+  const statsHtml=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="stat-card"><div class="stat-value">${st.totalEmployees}</div><div class="stat-label">إجمالي الموظفين</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${st.withDues}</div><div class="stat-label">عليهم مستحقات</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--warn);font-size:12px">${formatSAR(st.totalOutstanding)}</div><div class="stat-label">إجمالي المستحقات</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent2);font-size:12px">${formatSAR(st.totalSalaryPaid)}</div><div class="stat-label">إجمالي المصروف</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--danger);font-size:12px">${formatSAR(st.totalAdvances)}</div><div class="stat-label">إجمالي السلف</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--danger);font-size:12px">${formatSAR(st.totalExpenses)}</div><div class="stat-label">إجمالي المصاريف</div></div>
     </div>`;
+
+  // Site summary cards
+  const siteHtml = res.siteSummary.length > 1 ? `
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;font-weight:600">ملخص المواقع / Site Summary</div>
+      ${res.siteSummary.map(s=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:15px;font-weight:700">🏗 ${s.site}</span>
+            <span style="font-size:12px;color:var(--text2)">${s.totalEmployees} موظف</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+            <div><div style="font-size:10px;color:var(--text2)">مستحقات</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--danger);font-weight:700">${formatSAR(s.totalDues)}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">سلف</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--warn)">${formatSAR(s.totalAdvances)}</div></div>
+            <div><div style="font-size:10px;color:var(--text2)">مصاريف</div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--warn)">${formatSAR(s.totalExpenses)}</div></div>
+          </div>
+          ${s.unpaidCount>0?`<div style="margin-top:8px;font-size:11px;color:var(--warn)">⚠️ ${s.unpaidCount} لم يُصرف راتبه</div>`:''}
+          ${s.riskCount>0?`<div style="margin-top:4px;font-size:11px;color:var(--danger)">🚨 ${s.riskCount} مستحقاته تتجاوز راتبه</div>`:''}
+        </div>`).join('')}
+    </div>` : '';
+
+  // Employee table with full breakdown + flags
+  const tableHtml = !res.summary.length ? '<div class="empty">لا توجد بيانات</div>' : `
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px;font-weight:600">تفاصيل الموظفين / Employee Details</div>
+    <div class="dash-table">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:10px 12px;background:var(--surface2);font-size:10px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border)">
+        <div>الموظف</div>
+        <div style="text-align:center">سلف</div>
+        <div style="text-align:center">مصاريف</div>
+        <div style="text-align:center">مدفوع</div>
+        <div style="text-align:center">صافي</div>
+      </div>
+      ${res.summary.map(e=>{
+        const flags=[];
+        if(e.unpaidThisMonth) flags.push('<span style="color:var(--warn);font-size:10px">⚠️ لم يُصرف</span>');
+        if(e.duesExceedSalary) flags.push('<span style="color:var(--danger);font-size:10px">🚨 تجاوز الراتب</span>');
+        if(e.carryForward>0)  flags.push('<span style="color:var(--text2);font-size:10px">↩ ترحيل</span>');
+        const trend = e.totalDues > e.prevDues ? '📈' : e.totalDues < e.prevDues ? '📉' : '';
+        return `
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;padding:12px;border-bottom:1px solid var(--border);align-items:start;cursor:pointer;transition:background .15s" onclick="openEmployee('${e.iqamaNo}')" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+          <div>
+            <div style="font-size:13px;font-weight:700">${e.name} ${trend}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent)">${e.iqamaNo}</div>
+            <div style="font-size:10px;color:var(--text2)">${e.site}</div>
+            ${flags.length?`<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px">${flags.join('')}</div>`:''}
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;color:var(--warn)">${formatSAR(e.advances)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;color:var(--warn)">${formatSAR(e.expenses)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;color:var(--accent2)">${formatSAR(e.salaryPaid)}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;font-weight:700;color:${e.totalDues>0?'var(--danger)':'var(--accent2)'}">${formatSAR(Math.max(0,e.totalDues))}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  document.getElementById('dash-content').innerHTML = alertHtml + statsHtml + siteHtml + tableHtml;
+}
+
+// ── EXPORT CSV ─────────────────────────────────
+function exportCSV() {
+  if (!dashData) { showToast('افتح لوحة التحكم أولاً', 'error'); return; }
+  const MONTHS=['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const month = MONTHS[dashData.month] + ' ' + dashData.year;
+  const rows = [
+    ['الاسم','رقم الاقامة','الموقع','الراتب','ترحيل','سلف','مصاريف','مدفوع','صافي المستحقات'],
+    ...dashData.summary.map(e=>[
+      e.name, e.iqamaNo, e.site, e.salary,
+      e.carryForward, e.advances, e.expenses,
+      e.salaryPaid, Math.max(0, e.totalDues)
+    ])
+  ];
+  const csv = rows.map(r => r.join(',')).join('
+');
+  const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `employee-dues-${dashData.year}-${dashData.month}.csv`;
+  a.click();
+  showToast('تم التصدير ✓', 'success');
+}
+
+// ── WHATSAPP SHARE ─────────────────────────────
+function shareWhatsApp() {
+  if (!dashData) { showToast('افتح لوحة التحكم أولاً', 'error'); return; }
+  const MONTHS=['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const st = dashData.stats;
+  let msg = `*تقرير المستحقات — ${MONTHS[dashData.month]} ${dashData.year}*
+
+`;
+  msg += `👥 إجمالي الموظفين: ${st.totalEmployees}
+`;
+  msg += `💰 إجمالي المستحقات: ${formatSAR(st.totalOutstanding)}
+`;
+  msg += `✅ إجمالي المصروف: ${formatSAR(st.totalSalaryPaid)}
+`;
+  if(st.unpaidCount>0) msg += `⚠️ لم يُصرف راتبهم: ${st.unpaidCount}
+`;
+  if(st.riskCount>0)   msg += `🚨 مستحقات تتجاوز الراتب: ${st.riskCount}
+`;
+  msg += `
+*تفاصيل الموقع:*
+`;
+  dashData.siteSummary.forEach(s => {
+    msg += `
+🏗 ${s.site} (${s.totalEmployees} موظف)
+`;
+    msg += `  مستحقات: ${formatSAR(s.totalDues)}
+`;
+    msg += `  سلف: ${formatSAR(s.totalAdvances)} | مصاريف: ${formatSAR(s.totalExpenses)}
+`;
+  });
+  const url = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+}
+
+// ── PRINT ──────────────────────────────────────
+function printDashboard() {
+  if (!dashData) { showToast('افتح لوحة التحكم أولاً', 'error'); return; }
+  const MONTHS=['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const st = dashData.stats;
+  const rows = dashData.summary.map(e=>`
+    <tr>
+      <td>${e.name}</td><td>${e.iqamaNo}</td><td>${e.site}</td>
+      <td>${formatSAR(e.carryForward)}</td><td>${formatSAR(e.advances)}</td>
+      <td>${formatSAR(e.expenses)}</td><td>${formatSAR(e.salaryPaid)}</td>
+      <td><strong>${formatSAR(Math.max(0,e.totalDues))}</strong></td>
+    </tr>`).join('');
+  const win = window.open('','_blank');
+  win.document.write(`
+    <html dir="rtl"><head><meta charset="UTF-8">
+    <title>تقرير المستحقات — ${MONTHS[dashData.month]} ${dashData.year}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:20px;font-size:12px}
+      h2{font-size:16px;margin-bottom:4px}
+      .stats{display:flex;gap:20px;margin:12px 0;flex-wrap:wrap}
+      .stat{background:#f5f5f5;padding:8px 16px;border-radius:6px}
+      table{width:100%;border-collapse:collapse;margin-top:16px}
+      th{background:#333;color:#fff;padding:8px;text-align:right}
+      td{padding:7px 8px;border-bottom:1px solid #eee}
+      tr:nth-child(even){background:#fafafa}
+      @media print{body{padding:0}}
+    </style></head><body>
+    <h2>تقرير المستحقات — ${MONTHS[dashData.month]} ${dashData.year}</h2>
+    <div class="stats">
+      <div class="stat">الموظفون: <strong>${st.totalEmployees}</strong></div>
+      <div class="stat">إجمالي المستحقات: <strong>${formatSAR(st.totalOutstanding)}</strong></div>
+      <div class="stat">إجمالي المصروف: <strong>${formatSAR(st.totalSalaryPaid)}</strong></div>
+      <div class="stat">السلف: <strong>${formatSAR(st.totalAdvances)}</strong></div>
+      <div class="stat">المصاريف: <strong>${formatSAR(st.totalExpenses)}</strong></div>
+    </div>
+    <table>
+      <tr><th>الاسم</th><th>الإقامة</th><th>الموقع</th><th>ترحيل</th><th>سلف</th><th>مصاريف</th><th>مدفوع</th><th>صافي المستحقات</th></tr>
+      ${rows}
+    </table>
+    <script>window.onload=()=>window.print()<\/script>
+    </body></html>`);
+  win.document.close();
 }
 
 // ── UI HELPERS ─────────────────────────────────
