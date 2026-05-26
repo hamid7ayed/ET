@@ -390,7 +390,7 @@
 // ══════════════════════════════════════════════
 // CONFIG — 🔴 Replace before deploying
 // ══════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbyfZR0ZMM6s8Dlym8iB7YR02ZnSt6rd8n-F9amvdEBEsUt22cVRcxNC7p8X0-JcuqCwyQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw2obZmWpArq9rCmsd13EZeTRKLbtRTpNc0EqloHicXbkn37IGa9EGuig3YtxYspjhGlw/exec';
 
 // ══════════════════════════════════════════════
 // STATE
@@ -410,11 +410,8 @@ let state = {
 // ══════════════════════════════════════════════
 async function api(payload) {
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const url = API_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
+    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
     return await res.json();
   } catch (e) {
     return { success: false, error: 'خطأ في الشبكة / Network error' };
