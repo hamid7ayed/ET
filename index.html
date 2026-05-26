@@ -228,7 +228,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
 <div id="toast"></div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxkSZoXNMeh16hpjmX2Vvf996y523qYCV1FoTgRRzkGsF3OLYNi5j-px1JRxvlD6_2XQw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyOnyUMwBjrBIS3j1SLT_-Vtjj9n6qxw4iT7rS0fmyy2JnTP4voqIbfRSzeWy6nK6c0Jw/exec';
 
 // ── STATE ──────────────────────────────────────
 let S = {
@@ -428,7 +428,12 @@ function renderDetail() {
   const canSalary=['site_head','office','accounts'].includes(role);
   const canEdit=['office','accounts'].includes(role);
   const totalClass=d.totalDues>0?'positive':d.totalDues<0?'negative':'zero';
-  const netPayable=Math.max(0,parseFloat(emp.Salary)-d.totalDues);
+  // netPayable = what to hand the employee
+  // If dues > 0: pay (salary - dues), minimum 0
+  // If dues <= 0: employee has credit, pay full salary
+  const netPayable = d.totalDues > 0
+    ? Math.max(0, parseFloat(emp.Salary) - d.totalDues)
+    : parseFloat(emp.Salary);
   const MONTHS=['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const now=new Date();
   let monthOpts='';
