@@ -5,287 +5,164 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <meta name="theme-color" content="#0f1117"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>متتبع السلف | Employee Tracker</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: #2e3347;
-    --accent: #4f7fff;
-    --accent2: #38e8c0;
-    --danger: #ff5252;
-    --warn: #ffb142;
-    --success: #38e8c0;
-    --text: #eef0f8;
-    --text2: #8b90a8;
-    --text3: #5a607a;
-    --radius: 14px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.4);
-  }
+:root {
+  --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3347;
+  --accent:#4f7fff; --accent2:#38e8c0; --danger:#ff5252; --warn:#ffb142;
+  --text:#eef0f8; --text2:#8b90a8; --radius:14px; --shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{font-size:17px;font-weight:700}
+.topbar-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.logout-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger)}
 
-  body {
-    font-family: 'Tajawal', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    max-width: 480px;
-    margin: 0 auto;
-    overflow-x: hidden;
-  }
+/* LOGIN */
+#screen-login{justify-content:center;align-items:center;padding:32px 24px;background:radial-gradient(ellipse at top,#1a2040 0%,var(--bg) 70%)}
+.login-logo{text-align:center;margin-bottom:40px}
+.login-logo .icon{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px;box-shadow:0 8px 32px rgba(79,127,255,0.35)}
+.login-logo h1{font-size:22px;font-weight:800}
+.login-logo p{font-size:13px;color:var(--text2);margin-top:4px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:360px;box-shadow:var(--shadow)}
 
-  .screen { display: none; min-height: 100vh; flex-direction: column; }
-  .screen.active { display: flex; }
+/* FORMS */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,127,255,0.12)}
+.field select option{background:var(--surface)}
+.field-hint{font-size:11px;color:var(--text2);margin-top:5px}
 
-  /* TOP BAR */
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .topbar-title { font-size: 17px; font-weight: 700; }
-  .topbar-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .logout-btn {
-    background: none; border: 1px solid var(--border);
-    color: var(--text2); padding: 6px 14px; border-radius: 8px;
-    font-family: 'Tajawal', sans-serif; font-size: 13px; cursor: pointer;
-    transition: all .2s;
-  }
-  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+/* BUTTONS */
+.btn{width:100%;padding:14px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#2d5ce8);color:#fff;box-shadow:0 4px 16px rgba(79,127,255,0.4)}
+.btn-success{background:linear-gradient(135deg,#1db96a,#0f9e58);color:#fff;box-shadow:0 4px 16px rgba(29,185,106,0.35)}
+.btn-warn{background:linear-gradient(135deg,#ffb142,#e0872a);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-danger-ghost{background:none;border:1px solid var(--danger);color:var(--danger)}
+.btn-sm{width:auto;padding:7px 16px;font-size:13px;border-radius:8px}
+.btn:active{transform:scale(0.98)}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;margin-top:4px}
+.btn-row .btn{flex:1}
 
-  /* LOGIN */
-  #screen-login {
-    justify-content: center; align-items: center; padding: 32px 24px;
-    background: radial-gradient(ellipse at top, #1a2040 0%, var(--bg) 70%);
-  }
-  .login-logo { text-align: center; margin-bottom: 40px; }
-  .login-logo .icon {
-    width: 72px; height: 72px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 20px; display: flex; align-items: center; justify-content: center;
-    font-size: 32px; margin: 0 auto 16px;
-    box-shadow: 0 8px 32px rgba(79,127,255,0.35);
-  }
-  .login-logo h1 { font-size: 22px; font-weight: 800; }
-  .login-logo p { font-size: 13px; color: var(--text2); margin-top: 4px; }
-  .login-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 28px; width: 100%;
-    max-width: 360px; box-shadow: var(--shadow);
-  }
+.content{flex:1;padding:20px;overflow-y:auto}
 
-  /* FORMS */
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
-  .field input, .field select, .field textarea {
-    width: 100%; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 10px; padding: 13px 16px; color: var(--text);
-    font-family: 'Tajawal', sans-serif; font-size: 15px; outline: none; transition: border-color .2s;
-  }
-  .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,127,255,0.12); }
-  .field select option { background: var(--surface); }
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:70px;padding:13px 6px;text-align:center;font-size:12px;font-family:'Tajawal',sans-serif;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
-  /* BUTTONS */
-  .btn {
-    width: 100%; padding: 14px; border-radius: 10px; border: none;
-    font-family: 'Tajawal', sans-serif; font-size: 16px; font-weight: 700;
-    cursor: pointer; transition: all .2s;
-  }
-  .btn-primary { background: linear-gradient(135deg, var(--accent), #2d5ce8); color: #fff; box-shadow: 0 4px 16px rgba(79,127,255,0.4); }
-  .btn-success { background: linear-gradient(135deg, #1db96a, #0f9e58); color: #fff; box-shadow: 0 4px 16px rgba(29,185,106,0.35); }
-  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-sm { width: auto; padding: 8px 18px; font-size: 13px; border-radius: 8px; }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* EMPLOYEE LIST */
+.search-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;width:100%;color:var(--text);font-family:'Tajawal',sans-serif;font-size:15px;outline:none;margin-bottom:16px}
+.search-box:focus{border-color:var(--accent)}
+.emp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px}
+.emp-card:active{border-color:var(--accent);background:var(--surface2)}
+.emp-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.emp-info{flex:1;min-width:0}
+.emp-name{font-size:16px;font-weight:700}
+.emp-iqama{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);margin-top:2px}
+.emp-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.dues-badge{background:rgba(255,82,82,0.15);border:1px solid rgba(255,82,82,0.3);color:var(--danger);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.dues-badge.clear{background:rgba(56,232,192,0.1);border-color:rgba(56,232,192,0.3);color:var(--accent2)}
 
-  .content { flex: 1; padding: 20px; overflow-y: auto; }
+/* DETAIL */
+.back-btn{display:flex;align-items:center;gap:8px;color:var(--accent);font-size:14px;font-weight:500;background:none;border:none;cursor:pointer;padding:0;margin-bottom:20px;font-family:'Tajawal',sans-serif}
+.detail-header{margin-bottom:20px}
+.detail-name{font-size:22px;font-weight:800}
+.detail-iqama{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--accent);margin-top:4px;display:inline-flex;align-items:center;gap:6px}
+.detail-iqama::before{content:'🪪';font-size:13px}
+.detail-sub{font-size:13px;color:var(--text2);margin-top:6px}
 
-  /* TABS */
-  .tabs {
-    display: flex; background: var(--surface);
-    border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none;
-  }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    flex: 1; min-width: 80px; padding: 14px 8px; text-align: center;
-    font-size: 13px; font-family: 'Tajawal', sans-serif; font-weight: 500;
-    color: var(--text2); background: none; border: none;
-    border-bottom: 2px solid transparent; cursor: pointer; transition: all .2s; white-space: nowrap;
-  }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* DUES SUMMARY */
+.dues-summary{background:linear-gradient(135deg,#1a2040,#1a2832);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.dues-summary h3{font-size:13px;color:var(--text2);margin-bottom:12px}
+.dues-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.dues-item{text-align:center}
+.dues-item .label{font-size:11px;color:var(--text2);margin-bottom:4px}
+.dues-item .value{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500}
+.dues-item .value.red{color:var(--danger)}
+.dues-item .value.green{color:var(--accent2)}
+.dues-item .value.warn{color:var(--warn)}
+.dues-total{border-top:1px solid var(--border);padding-top:14px;text-align:center}
+.dues-total .label{font-size:13px;color:var(--text2)}
+.dues-total .amount{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:700;margin-top:4px}
+.dues-total .amount.positive{color:var(--danger)}
+.dues-total .amount.zero{color:var(--accent2)}
+.dues-total .amount.negative{color:var(--warn)}
 
-  /* EMPLOYEE LIST */
-  .search-box {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; width: 100%; color: var(--text);
-    font-family: 'Tajawal', sans-serif; font-size: 15px; outline: none; margin-bottom: 16px;
-  }
-  .search-box:focus { border-color: var(--accent); }
+/* ACTION SECTIONS */
+.action-section{margin-bottom:20px}
+.action-section h3{font-size:14px;color:var(--text2);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.action-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.info-box{background:rgba(79,127,255,0.08);border:1px solid rgba(79,127,255,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:2}
 
-  .emp-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
-    cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 14px;
-  }
-  .emp-card:active { border-color: var(--accent); background: var(--surface2); }
+/* DASHBOARD */
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 10px;text-align:center}
+.stat-card .stat-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.stat-card .stat-label{font-size:10px;color:var(--text2)}
+.filter-row{display:flex;gap:10px;margin-bottom:16px}
+.filter-row select{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:14px;outline:none}
+.dash-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.dash-table-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 14px;background:var(--surface2);font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border)}
+.dash-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:13px 14px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background .15s}
+.dash-row:last-child{border-bottom:none}
+.dash-row:hover{background:var(--surface2)}
+.dash-row .dname{font-size:13px;font-weight:700}
+.dash-row .diqama{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);margin-top:2px}
+.dash-row .dsite{font-size:10px;color:var(--text2)}
+.dash-row .mono{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:center}
+.dash-row .mono.danger{color:var(--danger);font-weight:700}
+.dash-row .mono.clear{color:var(--accent2)}
 
-  .emp-avatar {
-    width: 46px; height: 46px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 700; flex-shrink: 0;
-  }
-  .emp-info { flex: 1; min-width: 0; }
-  .emp-name { font-size: 16px; font-weight: 700; }
-  /* IqamaNo always shown below name */
-  .emp-iqama {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px; color: var(--accent); margin-top: 2px; letter-spacing: 0.5px;
-  }
-  .emp-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+/* MONTH NAV */
+.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px}
+.month-nav button{background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0 8px}
+.month-nav span{font-size:15px;font-weight:700}
 
-  .dues-badge {
-    background: rgba(255,82,82,0.15); border: 1px solid rgba(255,82,82,0.3);
-    color: var(--danger); padding: 4px 10px; border-radius: 20px;
-    font-size: 12px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; white-space: nowrap;
-  }
-  .dues-badge.clear { background: rgba(56,232,192,0.1); border-color: rgba(56,232,192,0.3); color: var(--accent2); }
+/* SITES MANAGEMENT */
+.site-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.site-item-name{font-size:15px;font-weight:600}
+.site-delete-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif;transition:all .2s}
+.site-delete-btn:hover{border-color:var(--danger);color:var(--danger)}
 
-  /* DETAIL */
-  .back-btn {
-    display: flex; align-items: center; gap: 8px; color: var(--accent);
-    font-size: 14px; font-weight: 500; background: none; border: none;
-    cursor: pointer; padding: 0; margin-bottom: 20px; font-family: 'Tajawal', sans-serif;
-  }
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:var(--surface2);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
-  /* Employee header in detail — name + iqama always together */
-  .detail-header { margin-bottom: 20px; }
-  .detail-name { font-size: 22px; font-weight: 800; }
-  .detail-iqama {
-    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
-    color: var(--accent); margin-top: 4px; display: inline-flex;
-    align-items: center; gap: 6px;
-  }
-  .detail-iqama::before { content: '🪪'; font-size: 13px; }
-  .detail-sub { font-size: 13px; color: var(--text2); margin-top: 6px; }
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:14px;z-index:9999;transition:transform .3s ease;white-space:nowrap;box-shadow:var(--shadow);max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.success{border-color:var(--accent2);color:var(--accent2)}
+#toast.error{border-color:var(--danger);color:var(--danger)}
 
-  .dues-summary {
-    background: linear-gradient(135deg, #1a2040, #1a2832);
-    border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
-  }
-  .dues-summary h3 { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
-  .dues-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-  .dues-item { text-align: center; }
-  .dues-item .label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
-  .dues-item .value { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500; }
-  .dues-item .value.red { color: var(--danger); }
-  .dues-item .value.green { color: var(--accent2); }
-  .dues-item .value.warn { color: var(--warn); }
-
-  .dues-total { border-top: 1px solid var(--border); padding-top: 14px; text-align: center; }
-  .dues-total .label { font-size: 13px; color: var(--text2); }
-  .dues-total .amount { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 700; margin-top: 4px; }
-  .dues-total .amount.positive { color: var(--danger); }
-  .dues-total .amount.zero { color: var(--accent2); }
-  .dues-total .amount.negative { color: var(--warn); }
-
-  .action-section { margin-bottom: 20px; }
-  .action-section h3 { font-size: 14px; color: var(--text2); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-  .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-
-  /* DASHBOARD */
-  .stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .stat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px 10px; text-align: center;
-  }
-  .stat-card .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
-  .stat-card .stat-label { font-size: 10px; color: var(--text2); }
-
-  .filter-row { display: flex; gap: 10px; margin-bottom: 16px; }
-  .filter-row select {
-    flex: 1; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 14px; color: var(--text);
-    font-family: 'Tajawal', sans-serif; font-size: 14px; outline: none;
-  }
-
-  .dash-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .dash-table-header {
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 14px;
-    background: var(--surface2); font-size: 11px; color: var(--text2); font-weight: 600;
-    border-bottom: 1px solid var(--border);
-  }
-  .dash-row {
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 13px 14px;
-    border-bottom: 1px solid var(--border); align-items: center;
-    cursor: pointer; transition: background .15s;
-  }
-  .dash-row:last-child { border-bottom: none; }
-  .dash-row:hover { background: var(--surface2); }
-  .dash-row .dname { font-size: 13px; font-weight: 700; }
-  /* IqamaNo always shown in dashboard rows */
-  .dash-row .diqama { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--accent); margin-top: 2px; }
-  .dash-row .dsite { font-size: 10px; color: var(--text2); }
-  .dash-row .mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: center; }
-  .dash-row .mono.danger { color: var(--danger); font-weight: 700; }
-  .dash-row .mono.clear { color: var(--accent2); }
-
-  /* MONTH NAV */
-  .month-nav {
-    display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px;
-  }
-  .month-nav button { background: none; border: none; color: var(--accent); font-size: 22px; cursor: pointer; padding: 0 8px; }
-  .month-nav span { font-size: 15px; font-weight: 700; }
-
-  /* MODAL */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    z-index: 500; align-items: flex-end; backdrop-filter: blur(4px);
-  }
-  .modal-overlay.active { display: flex; }
-  .modal-sheet {
-    background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px;
-    width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp .3s ease;
-  }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-  .modal-close {
-    background: var(--surface2); border: none; color: var(--text2);
-    width: 32px; height: 32px; border-radius: 50%; font-size: 18px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-  }
-
-  /* TOAST */
-  #toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 20px; font-size: 14px; z-index: 9999; transition: transform .3s ease;
-    white-space: nowrap; box-shadow: var(--shadow); max-width: 90vw; text-align: center;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-  #toast.success { border-color: var(--success); color: var(--success); }
-  #toast.error { border-color: var(--danger); color: var(--danger); }
-
-  .loader { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text2); gap: 10px; font-size: 14px; }
-  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .empty { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text2);gap:10px;font-size:14px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px 20px;color:var(--text2);font-size:14px}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ═══ LOGIN ═══ -->
 <div id="screen-login" class="screen active">
   <div class="login-logo">
     <div class="icon">📋</div>
@@ -305,34 +182,34 @@
   </div>
 </div>
 
-<!-- EMPLOYEES -->
+<!-- ═══ MAIN SCREEN ═══ -->
 <div id="screen-employees" class="screen">
   <div class="topbar">
     <div>
-      <div class="topbar-title">الموظفون / Employees</div>
+      <div class="topbar-title">متتبع الموظفين</div>
       <div class="topbar-sub" id="topbar-role"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div class="topbar-actions">
       <button class="btn btn-sm btn-ghost" id="btn-add-emp" onclick="showAddEmpModal()" style="display:none">+ موظف</button>
+      <button class="btn btn-sm btn-ghost" id="btn-sites" onclick="switchTab('sites')" style="display:none">🏗 مواقع</button>
       <button class="logout-btn" onclick="doLogout()">خروج</button>
     </div>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('list')">القائمة / List</button>
-    <button class="tab" id="tab-dashboard-btn" onclick="switchTab('dashboard')" style="display:none">لوحة التحكم / Dashboard</button>
+    <button class="tab active" id="tab-btn-list" onclick="switchTab('list')">الموظفون</button>
+    <button class="tab" id="tab-btn-dashboard" onclick="switchTab('dashboard')" style="display:none">لوحة التحكم</button>
+    <button class="tab" id="tab-btn-sites" onclick="switchTab('sites')" style="display:none">المواقع</button>
   </div>
 
-  <!-- LIST -->
+  <!-- LIST TAB -->
   <div id="tab-list" class="content">
-    <input class="search-box" type="text" placeholder="🔍 بحث بالاسم أو الإقامة / Search by name or Iqama..." oninput="filterEmployees(this.value)"/>
-    <div id="emp-list-container">
-      <div class="loader"><div class="spinner"></div> جار التحميل...</div>
-    </div>
+    <input class="search-box" type="text" placeholder="🔍 بحث بالاسم أو رقم الإقامة..." oninput="filterEmployees(this.value)"/>
+    <div id="emp-list-container"><div class="loader"><div class="spinner"></div> جار التحميل...</div></div>
   </div>
 
-  <!-- DASHBOARD -->
-  <div id="tab-dashboard-content" class="content" style="display:none">
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard" class="content" style="display:none">
     <div class="month-nav">
       <button onclick="dashPrevMonth()">‹</button>
       <span id="dash-month-label"></span>
@@ -346,18 +223,30 @@
     <div id="dash-stats" class="stat-row"></div>
     <div id="dash-table"></div>
   </div>
+
+  <!-- SITES TAB -->
+  <div id="tab-sites" class="content" style="display:none">
+    <div class="action-card" style="margin-bottom:20px">
+      <div class="field" style="margin-bottom:10px">
+        <label>اسم الموقع الجديد / New Site Name</label>
+        <input type="text" id="new-site-name" placeholder="مثال: Site C"/>
+      </div>
+      <button class="btn btn-primary" onclick="submitAddSite()">إضافة موقع / Add Site</button>
+    </div>
+    <div id="sites-list-container"><div class="loader"><div class="spinner"></div></div></div>
+  </div>
 </div>
 
-<!-- DETAIL -->
+<!-- ═══ DETAIL SCREEN ═══ -->
 <div id="screen-detail" class="screen">
   <div class="topbar">
-    <button class="back-btn" onclick="goBack()">← رجوع / Back</button>
+    <button class="back-btn" onclick="goBack()">← رجوع</button>
     <button class="logout-btn" onclick="doLogout()">خروج</button>
   </div>
   <div class="content" id="detail-content"></div>
 </div>
 
-<!-- ADD EMPLOYEE MODAL -->
+<!-- ═══ ADD EMPLOYEE MODAL ═══ -->
 <div class="modal-overlay" id="modal-add-emp">
   <div class="modal-sheet">
     <div class="modal-title">
@@ -365,8 +254,8 @@
       <button class="modal-close" onclick="closeModal('modal-add-emp')">×</button>
     </div>
     <div class="field">
-      <label>الاسم / Name</label>
-      <input type="text" id="ae-name" placeholder="اسم الموظف الكامل"/>
+      <label>الاسم الكامل / Full Name</label>
+      <input type="text" id="ae-name" placeholder="اسم الموظف"/>
     </div>
     <div class="field">
       <label>رقم الإقامة / Iqama No <span style="color:var(--danger)">*</span></label>
@@ -374,13 +263,39 @@
     </div>
     <div class="field">
       <label>الموقع / Site</label>
-      <input type="text" id="ae-site" placeholder="Site Name"/>
+      <select id="ae-site"><option value="">-- اختر الموقع / Select Site --</option></select>
     </div>
     <div class="field">
-      <label>الراتب / Salary (SAR)</label>
+      <label>الراتب الأساسي / Basic Salary (SAR)</label>
       <input type="number" id="ae-salary" placeholder="0"/>
     </div>
     <button class="btn btn-primary" onclick="submitAddEmployee()">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- ═══ EDIT EMPLOYEE MODAL ═══ -->
+<div class="modal-overlay" id="modal-edit-emp">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span>تعديل موظف / Edit Employee</span>
+      <button class="modal-close" onclick="closeModal('modal-edit-emp')">×</button>
+    </div>
+    <div style="background:rgba(79,127,255,0.08);border:1px solid rgba(79,127,255,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px">
+      رقم الإقامة / Iqama: <span id="ee-iqama-display" style="font-family:'IBM Plex Mono',monospace;color:var(--accent)"></span>
+    </div>
+    <div class="field">
+      <label>الاسم / Name</label>
+      <input type="text" id="ee-name" placeholder="الاسم الكامل"/>
+    </div>
+    <div class="field">
+      <label>الموقع / Site</label>
+      <select id="ee-site"><option value="">-- اختر الموقع / Select Site --</option></select>
+    </div>
+    <div class="field">
+      <label>الراتب / Salary (SAR)</label>
+      <input type="number" id="ee-salary" placeholder="0"/>
+    </div>
+    <button class="btn btn-warn" onclick="submitEditEmployee()">حفظ التعديل / Save Changes</button>
   </div>
 </div>
 
@@ -388,9 +303,9 @@
 
 <script>
 // ══════════════════════════════════════════════
-// CONFIG — 🔴 Replace before deploying
+// CONFIG
 // ══════════════════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbw2obZmWpArq9rCmsd13EZeTRKLbtRTpNc0EqloHicXbkn37IGa9EGuig3YtxYspjhGlw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyfZR0ZMM6s8Dlym8iB7YR02ZnSt6rd8n-F9amvdEBEsUt22cVRcxNC7p8X0-JcuqCwyQ/exec';
 
 // ══════════════════════════════════════════════
 // STATE
@@ -399,10 +314,12 @@ let state = {
   user: null,
   employees: [],
   filtered: [],
+  sites: [],
   currentEmp: null,
   currentDues: null,
   dashMonth: new Date().getMonth() + 1,
-  dashYear: new Date().getFullYear()
+  dashYear: new Date().getFullYear(),
+  activeTab: 'list'
 };
 
 // ══════════════════════════════════════════════
@@ -411,7 +328,7 @@ let state = {
 async function api(payload) {
   try {
     const url = API_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
-    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+    const res = await fetch(url, { redirect: 'follow' });
     return await res.json();
   } catch (e) {
     return { success: false, error: 'خطأ في الشبكة / Network error' };
@@ -424,30 +341,113 @@ async function api(payload) {
 async function doLogin() {
   const username = document.getElementById('login-user').value.trim();
   const password = document.getElementById('login-pass').value;
-  if (!username || !password) { showToast('أدخل بيانات الدخول / Enter credentials', 'error'); return; }
+  if (!username || !password) { showToast('أدخل بيانات الدخول', 'error'); return; }
   showToast('جار التحقق...', '');
   const res = await api({ action: 'login', username, password });
-  if (!res.success) { showToast(res.error || 'بيانات غير صحيحة', 'error'); return; }
+  if (!res.success) { showToast(res.error, 'error'); return; }
   state.user = res;
   setupRoleUI();
   showScreen('screen-employees');
+  await loadSites();
   loadEmployees();
   showToast('مرحباً ' + username + ' 👋', 'success');
 }
 
 function doLogout() {
-  state = { ...state, user: null, employees: [], filtered: [], currentEmp: null };
+  state = { ...state, user: null, employees: [], filtered: [], sites: [], currentEmp: null };
+  document.getElementById('login-pass').value = '';
   showScreen('screen-login');
 }
 
 function setupRoleUI() {
   const roleMap = { accounts: 'محاسبة / Accounts', office: 'مكتب / Office', site_head: 'مشرف موقع / Site Head' };
   document.getElementById('topbar-role').textContent = roleMap[state.user.role] || state.user.role;
-  document.getElementById('btn-add-emp').style.display = ['office','accounts'].includes(state.user.role) ? 'block' : 'none';
-  document.getElementById('tab-dashboard-btn').style.display = state.user.role === 'accounts' ? 'block' : 'none';
+
+  const canManage = ['office', 'accounts'].includes(state.user.role);
+  document.getElementById('btn-add-emp').style.display   = canManage ? 'block' : 'none';
+  document.getElementById('btn-sites').style.display     = 'none'; // tab already in tabs row
+  document.getElementById('tab-btn-dashboard').style.display = state.user.role === 'accounts' ? 'block' : 'none';
+  document.getElementById('tab-btn-sites').style.display = canManage ? 'block' : 'none';
+
+  // Site heads can also add employees — to their site only
+  if (state.user.role === 'site_head') {
+    document.getElementById('btn-add-emp').style.display = 'block';
+  }
+
   state.dashMonth = new Date().getMonth() + 1;
-  state.dashYear = new Date().getFullYear();
+  state.dashYear  = new Date().getFullYear();
   updateDashMonthLabel();
+}
+
+// ══════════════════════════════════════════════
+// SITES
+// ══════════════════════════════════════════════
+async function loadSites() {
+  const res = await api({ action: 'getSites' });
+  if (res.success) {
+    state.sites = res.data || [];
+    populateSiteDropdowns();
+  }
+}
+
+function populateSiteDropdowns() {
+  const selects = ['ae-site', 'ee-site'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = '<option value="">-- اختر الموقع / Select Site --</option>';
+
+    let sites = state.sites;
+    // Site head only sees their own site
+    if (state.user && state.user.role === 'site_head') {
+      sites = [state.user.site];
+    }
+
+    sites.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      if (s === cur) opt.selected = true;
+      el.appendChild(opt);
+    });
+  });
+}
+
+async function loadSitesList() {
+  document.getElementById('sites-list-container').innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+  const res = await api({ action: 'getSites' });
+  if (!res.success) { showToast(res.error, 'error'); return; }
+  state.sites = res.data || [];
+  populateSiteDropdowns();
+
+  if (!state.sites.length) {
+    document.getElementById('sites-list-container').innerHTML = '<div class="empty">لا توجد مواقع / No sites yet</div>';
+    return;
+  }
+  document.getElementById('sites-list-container').innerHTML = state.sites.map(s => `
+    <div class="site-item">
+      <span class="site-item-name">🏗 ${s}</span>
+      <button class="site-delete-btn" onclick="deleteSite('${s}')">حذف</button>
+    </div>
+  `).join('');
+}
+
+async function submitAddSite() {
+  const name = document.getElementById('new-site-name').value.trim();
+  if (!name) { showToast('أدخل اسم الموقع', 'error'); return; }
+  const res = await api({ action: 'addSite', siteName: name });
+  if (res.success) {
+    showToast('تم إضافة الموقع ✓', 'success');
+    document.getElementById('new-site-name').value = '';
+    loadSitesList();
+  } else showToast(res.error, 'error');
+}
+
+async function deleteSite(name) {
+  if (!confirm(`حذف موقع "${name}"؟ / Delete site "${name}"?`)) return;
+  const res = await api({ action: 'deleteSite', siteName: name });
+  if (res.success) { showToast('تم الحذف ✓', 'success'); loadSitesList(); }
+  else showToast(res.error, 'error');
 }
 
 // ══════════════════════════════════════════════
@@ -458,7 +458,7 @@ async function loadEmployees() {
   const res = await api({ action: 'getEmployees', role: state.user.role, site: state.user.site });
   if (!res.success) { showToast(res.error, 'error'); return; }
   state.employees = res.data || [];
-  state.filtered = [...state.employees];
+  state.filtered  = [...state.employees];
   renderEmployeeList();
 }
 
@@ -490,11 +490,18 @@ function renderEmployeeList() {
     </div>
   `).join('');
 
+  // Load dues badges for all employees
   state.filtered.forEach(emp => loadDuesBadge(emp.IqamaNo));
 }
 
 async function loadDuesBadge(iqamaNo) {
-  const res = await api({ action: 'getEmployeeDues', iqamaNo });
+  const now = new Date();
+  const res = await api({
+    action: 'getEmployeeDues',
+    iqamaNo,
+    month: now.getMonth() + 1,
+    year: now.getFullYear()
+  });
   const badge = document.getElementById('badge-' + iqamaNo);
   if (!badge) return;
   if (res.success) {
@@ -513,27 +520,50 @@ async function openEmployee(iqamaNo) {
   state.currentEmp = state.employees.find(e => String(e.IqamaNo) === String(iqamaNo));
   showScreen('screen-detail');
   document.getElementById('detail-content').innerHTML = '<div class="loader"><div class="spinner"></div> جار التحميل...</div>';
-  const res = await api({ action: 'getEmployeeDues', iqamaNo });
+
+  const now = new Date();
+  const res = await api({
+    action: 'getEmployeeDues',
+    iqamaNo,
+    month: now.getMonth() + 1,
+    year: now.getFullYear()
+  });
   if (!res.success) { showToast(res.error, 'error'); return; }
   state.currentDues = res.dues;
   renderDetail();
 }
 
 function renderDetail() {
-  const emp = state.currentEmp;
-  const d = state.currentDues;
+  const emp  = state.currentEmp;
+  const d    = state.currentDues;
   const role = state.user.role;
+
   const canAdvance = ['site_head','office','accounts'].includes(role);
-  const canExpense  = ['office','accounts'].includes(role);
-  const canSalary   = ['site_head','office','accounts'].includes(role);
+  const canExpense = ['office','accounts'].includes(role);
+  const canSalary  = ['site_head','office','accounts'].includes(role);
+  const canEdit    = ['office','accounts'].includes(role);
+
   const totalClass  = d.totalDues > 0 ? 'positive' : d.totalDues < 0 ? 'negative' : 'zero';
+  const netPayable  = Math.max(0, parseFloat(emp.Salary) - d.totalDues);
   const MONTHS = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+  // Build month options for salary
+  const now = new Date();
+  let monthOptions = '';
+  for (let i = 0; i < 3; i++) {
+    let m = now.getMonth() + 1 - i;
+    let y = now.getFullYear();
+    if (m <= 0) { m += 12; y--; }
+    const selected = i === 0 ? 'selected' : '';
+    monthOptions += `<option value="${m}_${y}" ${selected}>${MONTHS[m]} ${y}</option>`;
+  }
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-header">
       <div class="detail-name">${emp.Name}</div>
       <div class="detail-iqama">${emp.IqamaNo}</div>
       <div class="detail-sub">${emp.Site} · راتب: ${formatSAR(emp.Salary)}</div>
+      ${canEdit ? `<button class="btn btn-sm btn-ghost" style="margin-top:10px" onclick="showEditEmpModal()">✏️ تعديل بيانات / Edit</button>` : ''}
     </div>
 
     <div class="dues-summary">
@@ -552,7 +582,7 @@ function renderDetail() {
           <div class="value red">${formatSAR(d.expenses)}</div>
         </div>
         <div class="dues-item">
-          <div class="label">راتب مدفوع / Salary Paid</div>
+          <div class="label">مدفوع / Paid</div>
           <div class="value green">${formatSAR(d.salaryPaid)}</div>
         </div>
       </div>
@@ -560,7 +590,7 @@ function renderDetail() {
         <div class="label">إجمالي المستحقات / Total Dues</div>
         <div class="amount ${totalClass}">
           ${formatSAR(Math.abs(d.totalDues))}
-          ${d.totalDues < 0 ? '<span style="font-size:13px;color:var(--warn)"> (رصيد للموظف)</span>' : ''}
+          ${d.totalDues < 0 ? '<div style="font-size:13px;color:var(--warn);margin-top:4px">رصيد للموظف / Credit</div>' : ''}
         </div>
       </div>
     </div>
@@ -570,8 +600,8 @@ function renderDetail() {
       <h3>➕ إضافة سلفة / Add Advance</h3>
       <div class="action-card">
         <div class="field"><label>المبلغ / Amount (SAR)</label><input type="number" id="adv-amount" placeholder="0"/></div>
-        <div class="field"><label>ملاحظات / Notes</label><input type="text" id="adv-notes" placeholder="اختياري / optional"/></div>
-        <button class="btn btn-primary" onclick="submitAdvance()">حفظ السلفة / Save Advance</button>
+        <div class="field"><label>ملاحظات / Notes</label><input type="text" id="adv-notes" placeholder="اختياري"/></div>
+        <button class="btn btn-primary" onclick="submitAdvance()">حفظ السلفة</button>
       </div>
     </div>` : ''}
 
@@ -580,8 +610,8 @@ function renderDetail() {
       <h3>📄 إضافة مصروف / Add Expense</h3>
       <div class="action-card">
         <div class="field"><label>المبلغ / Amount (SAR)</label><input type="number" id="exp-amount" placeholder="0"/></div>
-        <div class="field"><label>ملاحظات / Notes</label><input type="text" id="exp-notes" placeholder="نوع المصروف / type"/></div>
-        <button class="btn btn-success" onclick="submitExpense()">حفظ المصروف / Save Expense</button>
+        <div class="field"><label>ملاحظات / Notes</label><input type="text" id="exp-notes" placeholder="نوع المصروف"/></div>
+        <button class="btn btn-success" onclick="submitExpense()">حفظ المصروف</button>
       </div>
     </div>` : ''}
 
@@ -589,14 +619,23 @@ function renderDetail() {
     <div class="action-section">
       <h3>💰 صرف راتب / Process Salary</h3>
       <div class="action-card">
-        <div style="background:rgba(79,127,255,0.08);border:1px solid rgba(79,127,255,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;line-height:1.8">
+        <div class="info-box">
           الراتب الأساسي: <strong>${formatSAR(emp.Salary)}</strong><br>
-          المستحق عليه: <strong style="color:var(--danger)">${formatSAR(d.totalDues)}</strong>
+          إجمالي المستحقات: <strong style="color:var(--danger)">${formatSAR(d.totalDues)}</strong><br>
+          <span style="display:block;border-top:1px solid rgba(79,127,255,0.2);margin-top:6px;padding-top:6px">
+            صافي للموظف: <strong style="color:var(--accent2);font-size:15px">${formatSAR(netPayable)}</strong>
+          </span>
         </div>
-        <div class="field"><label>المبلغ المدفوع / Amount Paid (SAR)</label>
-          <input type="number" id="sal-amount" placeholder="${emp.Salary}" value="${emp.Salary}"/>
+        <div class="field">
+          <label>الشهر / Month</label>
+          <select id="sal-month">${monthOptions}</select>
         </div>
-        <button class="btn btn-success" onclick="submitSalary()">تأكيد الصرف / Confirm Payment</button>
+        <div class="field">
+          <label>المبلغ المدفوع / Amount Paid (SAR)</label>
+          <input type="number" id="sal-amount" value="${netPayable}" placeholder="${netPayable}"/>
+          <div class="field-hint">القيمة المقترحة = الراتب − المستحقات</div>
+        </div>
+        <button class="btn btn-success" onclick="submitSalary()">تأكيد الصرف / Confirm</button>
       </div>
     </div>` : ''}
   `;
@@ -609,7 +648,7 @@ async function submitAdvance() {
   const amount = parseFloat(document.getElementById('adv-amount').value);
   if (!amount || amount <= 0) { showToast('أدخل مبلغاً صحيحاً', 'error'); return; }
   const notes = document.getElementById('adv-notes').value;
-  const res = await api({ action: 'addAdvance', iqamaNo: state.currentEmp.IqamaNo, amount, notes, addedBy: state.user.username });
+  const res = await api({ action:'addAdvance', iqamaNo:state.currentEmp.IqamaNo, amount, notes, addedBy:state.user.username });
   if (res.success) { showToast('تم حفظ السلفة ✓', 'success'); openEmployee(state.currentEmp.IqamaNo); }
   else showToast(res.error, 'error');
 }
@@ -618,7 +657,7 @@ async function submitExpense() {
   const amount = parseFloat(document.getElementById('exp-amount').value);
   if (!amount || amount <= 0) { showToast('أدخل مبلغاً صحيحاً', 'error'); return; }
   const notes = document.getElementById('exp-notes').value;
-  const res = await api({ action: 'addExpense', iqamaNo: state.currentEmp.IqamaNo, amount, notes, addedBy: state.user.username });
+  const res = await api({ action:'addExpense', iqamaNo:state.currentEmp.IqamaNo, amount, notes, addedBy:state.user.username });
   if (res.success) { showToast('تم حفظ المصروف ✓', 'success'); openEmployee(state.currentEmp.IqamaNo); }
   else showToast(res.error, 'error');
 }
@@ -626,13 +665,13 @@ async function submitExpense() {
 async function submitSalary() {
   const amount = parseFloat(document.getElementById('sal-amount').value);
   if (!amount || amount <= 0) { showToast('أدخل مبلغاً صحيحاً', 'error'); return; }
-  const now = new Date();
+  const monthYear = document.getElementById('sal-month').value.split('_');
   const res = await api({
-    action: 'addSalaryPayment',
+    action:'addSalaryPayment',
     iqamaNo: state.currentEmp.IqamaNo,
     amountPaid: amount,
-    month: now.getMonth() + 1,
-    year: now.getFullYear(),
+    month: parseInt(monthYear[0]),
+    year: parseInt(monthYear[1]),
     processedBy: state.user.username
   });
   if (res.success) { showToast('تم صرف الراتب ✓', 'success'); openEmployee(state.currentEmp.IqamaNo); }
@@ -640,19 +679,72 @@ async function submitSalary() {
 }
 
 // ══════════════════════════════════════════════
-// ADD EMPLOYEE
+// ADD / EDIT EMPLOYEE
 // ══════════════════════════════════════════════
-function showAddEmpModal() { document.getElementById('modal-add-emp').classList.add('active'); }
+function showAddEmpModal() {
+  // Reset form completely
+  document.getElementById('ae-name').value   = '';
+  document.getElementById('ae-iqama').value  = '';
+  document.getElementById('ae-salary').value = '';
+  document.getElementById('ae-site').value   = '';
+
+  // Lock site for site_head
+  const siteSelect = document.getElementById('ae-site');
+  if (state.user.role === 'site_head') {
+    siteSelect.innerHTML = `<option value="${state.user.site}">${state.user.site}</option>`;
+    siteSelect.disabled = true;
+  } else {
+    siteSelect.disabled = false;
+    populateSiteDropdowns();
+  }
+
+  document.getElementById('modal-add-emp').classList.add('active');
+}
 
 async function submitAddEmployee() {
   const name   = document.getElementById('ae-name').value.trim();
   const iqama  = document.getElementById('ae-iqama').value.trim();
-  const site   = document.getElementById('ae-site').value.trim();
+  const site   = document.getElementById('ae-site').value;
   const salary = parseFloat(document.getElementById('ae-salary').value);
-  if (!name || !iqama || !site || !salary) { showToast('أكمل جميع الحقول / Fill all fields', 'error'); return; }
-  const res = await api({ action: 'addEmployee', name, iqamaNo: iqama, site, salary, addedBy: state.user.username });
-  if (res.success) { showToast('تم إضافة الموظف ✓', 'success'); closeModal('modal-add-emp'); loadEmployees(); }
-  else showToast(res.error, 'error');
+  if (!name || !iqama || !site || !salary) { showToast('أكمل جميع الحقول', 'error'); return; }
+
+  const res = await api({ action:'addEmployee', name, iqamaNo:iqama, site, salary, addedBy:state.user.username });
+  if (res.success) {
+    showToast('تم إضافة الموظف ✓', 'success');
+    closeModal('modal-add-emp');
+    loadEmployees();
+  } else showToast(res.error, 'error');
+}
+
+function showEditEmpModal() {
+  const emp = state.currentEmp;
+  document.getElementById('ee-iqama-display').textContent = emp.IqamaNo;
+  document.getElementById('ee-name').value   = emp.Name;
+  document.getElementById('ee-salary').value = emp.Salary;
+  populateSiteDropdowns();
+  // Set current site after populating
+  setTimeout(() => { document.getElementById('ee-site').value = emp.Site; }, 50);
+  document.getElementById('modal-edit-emp').classList.add('active');
+}
+
+async function submitEditEmployee() {
+  const name   = document.getElementById('ee-name').value.trim();
+  const site   = document.getElementById('ee-site').value;
+  const salary = parseFloat(document.getElementById('ee-salary').value);
+  if (!name || !site || !salary) { showToast('أكمل جميع الحقول', 'error'); return; }
+
+  const res = await api({ action:'editEmployee', iqamaNo:state.currentEmp.IqamaNo, name, site, salary });
+  if (res.success) {
+    showToast('تم التعديل ✓', 'success');
+    closeModal('modal-edit-emp');
+    // Update local state
+    state.currentEmp.Name   = name;
+    state.currentEmp.Site   = site;
+    state.currentEmp.Salary = salary;
+    // Refresh employees list and re-render detail
+    loadEmployees();
+    openEmployee(state.currentEmp.IqamaNo);
+  } else showToast(res.error, 'error');
 }
 
 // ══════════════════════════════════════════════
@@ -665,19 +757,20 @@ function updateDashMonthLabel() {
   if (el) el.textContent = MONTHS_AR[state.dashMonth] + ' ' + state.dashYear;
 }
 function dashPrevMonth() {
-  state.dashMonth--; if (state.dashMonth === 0) { state.dashMonth = 12; state.dashYear--; }
+  state.dashMonth--; if (state.dashMonth===0){state.dashMonth=12;state.dashYear--;}
   updateDashMonthLabel(); loadDashboard();
 }
 function dashNextMonth() {
-  state.dashMonth++; if (state.dashMonth === 13) { state.dashMonth = 1; state.dashYear++; }
+  state.dashMonth++; if (state.dashMonth===13){state.dashMonth=1;state.dashYear++;}
   updateDashMonthLabel(); loadDashboard();
 }
 
 async function loadDashboard() {
   document.getElementById('dash-stats').innerHTML = '<div class="loader" style="grid-column:1/-1"><div class="spinner"></div></div>';
   document.getElementById('dash-table').innerHTML = '';
+
   const site = document.getElementById('dash-site-filter').value;
-  const res = await api({ action: 'getDashboard', month: state.dashMonth, year: state.dashYear, site });
+  const res = await api({ action:'getDashboard', month:state.dashMonth, year:state.dashYear, site });
   if (!res.success) { showToast(res.error, 'error'); return; }
 
   const s = res.stats;
@@ -712,10 +805,10 @@ async function loadDashboard() {
   document.getElementById('dash-table').innerHTML = `
     <div class="dash-table">
       <div class="dash-table-header">
-        <div>الموظف / Employee</div>
+        <div>الموظف</div>
         <div style="text-align:center">سلف</div>
         <div style="text-align:center">مصاريف</div>
-        <div style="text-align:center">صافي / Net</div>
+        <div style="text-align:center">صافي</div>
       </div>
       ${res.summary.map(e => `
         <div class="dash-row" onclick="openEmployee('${e.iqamaNo}')">
@@ -726,7 +819,7 @@ async function loadDashboard() {
           </div>
           <div class="mono">${formatSAR(e.advances)}</div>
           <div class="mono">${formatSAR(e.expenses)}</div>
-          <div class="mono ${e.totalDues > 0 ? 'danger' : 'clear'}">${formatSAR(e.totalDues)}</div>
+          <div class="mono ${e.totalDues>0?'danger':'clear'}">${formatSAR(e.totalDues)}</div>
         </div>
       `).join('')}
     </div>
@@ -739,38 +832,44 @@ async function loadDashboard() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
-function goBack() { showScreen('screen-employees'); }
+
+function goBack() {
+  showScreen('screen-employees');
+  switchTab('list');
+}
+
 function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  if (tab === 'list') {
-    document.querySelectorAll('.tab')[0].classList.add('active');
-    document.getElementById('tab-list').style.display = 'block';
-    document.getElementById('tab-dashboard-content').style.display = 'none';
-  } else {
-    document.querySelectorAll('.tab')[1].classList.add('active');
-    document.getElementById('tab-list').style.display = 'none';
-    document.getElementById('tab-dashboard-content').style.display = 'block';
-    loadDashboard();
-  }
+  state.activeTab = tab;
+  ['list','dashboard','sites'].forEach(t => {
+    const content = document.getElementById('tab-' + t);
+    const btn     = document.getElementById('tab-btn-' + t);
+    if (content) content.style.display = t === tab ? 'block' : 'none';
+    if (btn)     btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'sites')     loadSitesList();
 }
+
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
 function formatSAR(n) {
   n = parseFloat(n) || 0;
-  return n.toLocaleString('en-SA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' ر.س';
+  return n.toLocaleString('en-SA', { minimumFractionDigits:0, maximumFractionDigits:0 }) + ' ر.س';
 }
+
 let toastTimer;
 function showToast(msg, type) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show ' + (type || '');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+  t.textContent = msg; t.className = 'show ' + (type||'');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className=''; }, 3000);
 }
 
 // PWA
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(console.warn);
 document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('active'); });
 });
 </script>
 </body>
