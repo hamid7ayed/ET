@@ -228,7 +228,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min
 <div id="toast"></div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyOnyUMwBjrBIS3j1SLT_-Vtjj9n6qxw4iT7rS0fmyy2JnTP4voqIbfRSzeWy6nK6c0Jw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxChcQJSJ3tdVsChFQQ3eqoS5jNOCJuFkXsMsGFWF1qWneZxhnxiK_n5NXRFFw974iapg/exec';
 
 // ── STATE ──────────────────────────────────────
 let S = {
@@ -427,13 +427,14 @@ function renderDetail() {
   const canExpense=['office','accounts'].includes(role);
   const canSalary=['site_head','office','accounts'].includes(role);
   const canEdit=['office','accounts'].includes(role);
-  const totalClass=d.totalDues>0?'positive':d.totalDues<0?'negative':'zero';
+  const totalClass=(d.totalDuesDisplay||d.totalDues)>0?'positive':d.totalDues<0?'negative':'zero';
   // netPayable = what to hand the employee
-  // If dues > 0: pay (salary - dues), minimum 0
-  // If dues <= 0: employee has credit, pay full salary
+  // If employee has dues: pay (salary - dues), min 0
+  // If employee has credit (overpaid): pay full salary
+  const salary = parseFloat(emp.Salary);
   const netPayable = d.totalDues > 0
-    ? Math.max(0, parseFloat(emp.Salary) - d.totalDues)
-    : parseFloat(emp.Salary);
+    ? Math.max(0, salary - d.totalDues)
+    : salary;
   const MONTHS=['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const now=new Date();
   let monthOpts='';
@@ -461,7 +462,7 @@ function renderDetail() {
       </div>
       <div class="dues-total">
         <div class="label">إجمالي المستحقات / Total Dues</div>
-        <div class="amount ${totalClass}">${formatSAR(Math.abs(d.totalDues))}
+        <div class="amount ${totalClass}">${formatSAR(d.totalDuesDisplay !== undefined ? d.totalDuesDisplay : Math.abs(d.totalDues))}
           ${d.totalDues<0?'<div style="font-size:13px;color:var(--warn);margin-top:4px">رصيد للموظف / Credit</div>':''}
         </div>
       </div>
