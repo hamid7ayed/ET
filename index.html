@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<meta name="theme-color" content="#0f1117"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="سلف"/>
-<link rel="apple-touch-icon" href="icon-192.png"/>
-<link rel="manifest" href="manifest.json"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="سلف">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <title>متتبع السلف | Employee Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+
+
 
 
 
@@ -297,10 +303,11 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-
 
 
 
+
+
 </style>
 </head>
 <body>
-
 <div id="screen-login" class="screen active">
   <div class="login-wrap">
     <div class="login-logo">
@@ -504,15 +511,15 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-
   </div>
 </div>
 
-<script type="module">
+<script>
 
+// ===
+// FIREBASE COMPAT SDK (no imports needed)
+// ===
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-// ══════════════════════════════════════════
+// ===
 // FIREBASE CONFIG
-// ══════════════════════════════════════════
+// ===
 const firebaseConfig = {
   apiKey: "AIzaSyDO7ad5jHj5jfjWJCaTRSgJrse2QyF4dqA",
   authDomain: "employee-tracker-8975f.firebaseapp.com",
@@ -522,12 +529,12 @@ const firebaseConfig = {
   appId: "1:653703256066:web:9f3b0eb398514948c72f1b"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-// ══════════════════════════════════════════
+// ===
 // CONSTANTS
-// ══════════════════════════════════════════
+// ===
 const MONTHS = ['','يناير / Jan','فبراير / Feb','مارس / Mar','أبريل / Apr','مايو / May','يونيو / Jun','يوليو / Jul','أغسطس / Aug','سبتمبر / Sep','أكتوبر / Oct','نوفمبر / Nov','ديسمبر / Dec'];
 const MONTHS_SHORT = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const ROLES = { admin:'مدير / Admin', office:'مكتب / Office', accounts:'محاسبة / Accounts', site_head:'مشرف موقع / Site Head' };
@@ -535,9 +542,9 @@ const TX_TYPES = ['advance','expense','loan','deduction','bonus'];
 const TX_LABELS = { advance:'سلفة / Advance', expense:'مصروف / Expense', loan:'قرض / Loan', deduction:'خصم / Deduction', bonus:'مكافأة / Bonus' };
 const TX_EFFECT = { advance:+1, expense:+1, loan:+1, deduction:+1, bonus:-1 };
 
-// ══════════════════════════════════════════
+// ===
 // STATE
-// ══════════════════════════════════════════
+// ===
 const S = {
   user: null, theme: localStorage.getItem('theme') || 'dark',
   employees: [], sites: [], jobTitles: [],
@@ -546,9 +553,9 @@ const S = {
   dashData: null, cache: {}
 };
 
-// ══════════════════════════════════════════
+// ===
 // THEME
-// ══════════════════════════════════════════
+// ===
 function applyTheme(t) {
   S.theme = t;
   localStorage.setItem('theme', t);
@@ -557,9 +564,9 @@ function applyTheme(t) {
   if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
 }
 
-// ══════════════════════════════════════════
+// ===
 // HELPERS
-// ══════════════════════════════════════════
+// ===
 function sar(n) { return (parseFloat(n)||0).toLocaleString('en-SA',{maximumFractionDigits:0})+' ر.س'; }
 function today() { return new Date().toISOString().split('T')[0]; }
 function monthKey(m,y) { return y+'-'+(m<10?'0'+m:m); }
@@ -590,31 +597,38 @@ function switchTab(name) {
 
 function loading(id, msg) { document.getElementById(id).innerHTML='<div class="loader"><div class="spin"></div>'+(msg||'جار التحميل...')+'</div>'; }
 
-// ══════════════════════════════════════════
+// ===
 // FIRESTORE HELPERS
-// ══════════════════════════════════════════
+// ===
 async function fsGet(col, id) {
-  const d = await getDoc(doc(db, col, id));
-  return d.exists() ? { id:d.id, ...d.data() } : null;
+  const d = await db.collection(col).doc(id).get();
+  return d.exists ? { id:d.id, ...d.data() } : null;
 }
 async function fsAll(col) {
-  const snap = await getDocs(collection(db, col));
-  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  try {
+    console.log('fsAll called for:', col);
+    const snap = await db.collection(col).get();
+    console.log('fsAll result for', col, ':', snap.size, 'docs');
+    return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  } catch(e) {
+    console.error('fsAll error for', col, ':', e.code, e.message);
+    return [];
+  }
 }
 async function fsWhere(col, field, op, val) {
-  const snap = await getDocs(query(collection(db, col), where(field, op, val)));
+  const snap = await db.collection(col).where(field, op, val).get();
   return snap.docs.map(d=>({ id:d.id, ...d.data() }));
 }
 async function fsAdd(col, data) {
-  const ref = await addDoc(collection(db, col), { ...data, createdAt: new Date().toISOString() });
+  const ref = await db.collection(col).add({ ...data, createdAt: new Date().toISOString() });
   return ref.id;
 }
-async function fsUpdate(col, id, data) { await updateDoc(doc(db, col, id), data); }
-async function fsDelete(col, id) { await deleteDoc(doc(db, col, id)); }
+async function fsUpdate(col, id, data) { await db.collection(col).doc(id).update(data); }
+async function fsDelete(col, id) { await db.collection(col).doc(id).delete(); }
 
-// ══════════════════════════════════════════
+// ===
 // AUTH (simple — users stored in Firestore)
-// ══════════════════════════════════════════
+// ===
 async function doLogin() {
   const username = document.getElementById('inp-user').value.trim();
   const password = document.getElementById('inp-pass').value;
@@ -622,13 +636,22 @@ async function doLogin() {
   const btn = document.getElementById('login-btn');
   btn.textContent='...'; btn.disabled=true;
   try {
-    // Get ALL users and filter client-side to avoid Firestore index requirement
+    console.log('Attempting login for:', username);
+    console.log('Firebase app:', typeof firebase, typeof firebase?.firestore);
+    console.log('DB:', typeof db);
+
+    // Test Firestore connection first
     const allUsers = await fsAll('users');
-    console.log('All users found:', allUsers.length, allUsers);
-    const user = allUsers.find(u =>
-      String(u.username).trim().toLowerCase() === username.toLowerCase() &&
-      String(u.password).trim() === password
-    );
+    console.log('Users collection size:', allUsers.length);
+    console.log('Users data:', JSON.stringify(allUsers));
+
+    const user = allUsers.find(u => {
+      const uMatch = String(u.username||'').trim().toLowerCase() === username.toLowerCase();
+      const pMatch = String(u.password||'').trim() === String(password).trim();
+      console.log('Checking:', u.username, '| uMatch:', uMatch, '| pMatch:', pMatch);
+      return uMatch && pMatch;
+    });
+
     console.log('Matched user:', user);
     if (!user) {
       toast('بيانات غير صحيحة / Invalid credentials','err');
@@ -655,9 +678,9 @@ function doLogout() {
   show('screen-login');
 }
 
-// ══════════════════════════════════════════
+// ===
 // MASTER DATA
-// ══════════════════════════════════════════
+// ===
 async function loadMasterData() {
   const [emps, sites, jobs] = await Promise.all([
     fsAll('employees'),
@@ -669,9 +692,9 @@ async function loadMasterData() {
   S.jobTitles = jobs.map(j=>j.name).filter(Boolean);
 }
 
-// ══════════════════════════════════════════
+// ===
 // SETUP UI
-// ══════════════════════════════════════════
+// ===
 function setupMainUI() {
   const role = S.user.role;
   // Topbar
@@ -704,9 +727,9 @@ function fillDropdown(id, items, selected) {
   } else { el.disabled=false; }
 }
 
-// ══════════════════════════════════════════
+// ===
 // EMPLOYEE LIST
-// ══════════════════════════════════════════
+// ===
 async function loadEmployees() {
   loading('emp-list');
   // Reload fresh from Firestore each time
@@ -718,11 +741,11 @@ async function loadEmployees() {
   // Batch load current month dues for all employees
   const now = new Date();
   const mk = monthKey(now.getMonth()+1, now.getFullYear());
-  const txSnap = await getDocs(query(collection(db,'transactions'), where('monthKey','==',mk)));
+  const txSnap = await db.collection('transactions').where('monthKey','==',mk).get();
   const txList = txSnap.docs.map(d=>({id:d.id,...d.data()}));
 
   // Also get carry forwards
-  const cfSnap = await getDocs(query(collection(db,'carryForward'), where('monthKey','==',mk)));
+  const cfSnap = await db.collection('carryForward').where('monthKey','==',mk).get();
   const cfList = cfSnap.docs.map(d=>({id:d.id,...d.data()}));
 
   S.cache.empDues = {};
@@ -807,9 +830,9 @@ function renderEmpList(emps) {
   });
 }
 
-// ══════════════════════════════════════════
+// ===
 // EMPLOYEE DETAIL
-// ══════════════════════════════════════════
+// ===
 async function openEmp(iqamaNo) {
   S.currentEmp = S.employees.find(e=>e.iqamaNo===iqamaNo);
   show('screen-detail');
@@ -820,8 +843,8 @@ async function openEmp(iqamaNo) {
 
   // Load this month's transactions + carry forward
   const [txSnap, cfSnap] = await Promise.all([
-    getDocs(query(collection(db,'transactions'), where('iqamaNo','==',iqamaNo), where('monthKey','==',mk))),
-    getDocs(query(collection(db,'carryForward'), where('iqamaNo','==',iqamaNo), where('monthKey','==',mk)))
+    db.collection('transactions').where('iqamaNo','==',iqamaNo).where('monthKey','==',mk).get(),
+    db.collection('carryForward').where('iqamaNo','==',iqamaNo).where('monthKey','==',mk).get()
   ]);
 
   S.currentTx = txSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1006,9 +1029,9 @@ async function saveSalary() {
   openEmp(S.currentEmp.iqamaNo);
 }
 
-// ══════════════════════════════════════════
+// ===
 // ADD / EDIT EMPLOYEE
-// ══════════════════════════════════════════
+// ===
 function openAddModal() {
   ['ae-name','ae-shortname','ae-iqama','ae-passport','ae-phone','ae-salary','ae-iqama-expiry'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   fillDropdown('ae-site', S.sites);
@@ -1076,9 +1099,9 @@ async function saveEdit() {
   openEmp(S.currentEmp.iqamaNo);
 }
 
-// ══════════════════════════════════════════
+// ===
 // PAYSLIP
-// ══════════════════════════════════════════
+// ===
 function generatePayslip() {
   const emp=S.currentEmp, d=S.currentDues;
   const salary=parseFloat(emp.salary)||0;
@@ -1104,13 +1127,13 @@ function generatePayslip() {
     +(d.deductions?'<div class="row"><span>خصومات / Deductions</span><span class="red">'+sar(d.deductions)+'</span></div>':'')
     +(d.bonuses?'<div class="row"><span>مكافآت / Bonuses</span><span class="grn">'+sar(d.bonuses)+'</span></div>':'')
     +'<div class="row total"><span>صافي الراتب / Net Payable</span><span class="grn">'+sar(net)+'</span></div>'
-    +'<script>window.onload=function(){window.print();}\x3C/script></body></html>');
+    +'\x3Cscript>window.onload=function(){window.print();}\x3C/script></body></html>');
   w.document.close();
 }
 
-// ══════════════════════════════════════════
+// ===
 // DASHBOARD
-// ══════════════════════════════════════════
+// ===
 function updateMonthLbl() {
   const el=document.getElementById('dash-month-lbl');
   if(el) el.textContent=MONTHS_SHORT[S.dashMonth]+' '+S.dashYear;
@@ -1126,8 +1149,8 @@ async function loadDashboard() {
 
   // Single batch read for all tx this month
   const [txSnap, cfSnap] = await Promise.all([
-    getDocs(query(collection(db,'transactions'), where('monthKey','==',mk))),
-    getDocs(query(collection(db,'carryForward'), where('monthKey','==',mk)))
+    db.collection('transactions').where('monthKey','==',mk).get(),
+    db.collection('carryForward').where('monthKey','==',mk).get()
   ]);
   const txAll = txSnap.docs.map(d=>({id:d.id,...d.data()}));
   const cfAll = cfSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1137,8 +1160,8 @@ async function loadDashboard() {
   if(pm<1){pm=12;py--;}
   const pmk = monthKey(pm,py);
   const [ptxSnap,pcfSnap] = await Promise.all([
-    getDocs(query(collection(db,'transactions'),where('monthKey','==',pmk))),
-    getDocs(query(collection(db,'carryForward'),where('monthKey','==',pmk)))
+    db.collection('transactions').where('monthKey','==',pmk).get(),
+    db.collection('carryForward').where('monthKey','==',pmk).get()
   ]);
   const ptxAll=ptxSnap.docs.map(d=>({id:d.id,...d.data()}));
   const pcfAll=pcfSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -1284,9 +1307,9 @@ function drawCharts(summary, totalAdv, totalExp, totalPaid, totalBonus) {
   }
 }
 
-// ══════════════════════════════════════════
+// ===
 // EXPORT
-// ══════════════════════════════════════════
+// ===
 function exportCSV() {
   if (!S.dashData) { toast('افتح لوحة التحكم أولاً','err'); return; }
   const d=S.dashData;
@@ -1328,13 +1351,13 @@ function printReport() {
     +'<h2>تقرير المستحقات — '+MONTHS_SHORT[d.month]+' '+d.year+'</h2>'
     +'<div class="row"><div class="s">الموظفون: <b>'+d.summary.length+'</b></div><div class="s">المستحقات: <b>'+sar(totalDues)+'</b></div><div class="s">المصروف: <b>'+sar(totalPaid)+'</b></div></div>'
     +'<table><tr><th>الاسم</th><th>الإقامة</th><th>الموقع</th><th>ترحيل</th><th>سلف</th><th>مصاريف</th><th>مدفوع</th><th>المستحقات</th><th>صافي</th></tr>'+rows+'</table>'
-    +'<script>window.onload=function(){window.print();}\x3C/script></body></html>');
+    +'\x3Cscript>window.onload=function(){window.print();}\x3C/script></body></html>');
   w.document.close();
 }
 
-// ══════════════════════════════════════════
+// ===
 // SITES & USERS TABS
-// ══════════════════════════════════════════
+// ===
 async function loadSitesTab() {
   loading('sites-list');
   const sites = await fsAll('sites');
@@ -1425,9 +1448,9 @@ async function addJobTitle() {
   loadJobTitles();
 }
 
-// ══════════════════════════════════════════
+// ===
 // EDIT SAVE FUNCTIONS
-// ══════════════════════════════════════════
+// ===
 async function saveSiteEdit() {
   const id   = document.getElementById('edit-site-id').value;
   const name = document.getElementById('edit-site-name').value.trim();
@@ -1504,9 +1527,9 @@ async function addUser() {
   loadUsersTab();
 }
 
-// ══════════════════════════════════════════
+// ===
 // MONTH-END
-// ══════════════════════════════════════════
+// ===
 async function runMonthEnd() {
   const now=new Date();
   let m=now.getMonth(), y=now.getFullYear();
@@ -1515,23 +1538,23 @@ async function runMonthEnd() {
   if(!confirm('إغلاق شهر '+MONTHS_SHORT[m]+' '+y+'؟')) return;
 
   const emps=S.employees;
-  const txSnap=await getDocs(query(collection(db,'transactions'),where('monthKey','==',mk)));
+  const txSnap=await db.collection('transactions').where('monthKey','==',mk).get();
   const txAll=txSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const cfSnap=await getDocs(query(collection(db,'carryForward'),where('monthKey','==',mk)));
+  const cfSnap=await db.collection('carryForward').where('monthKey','==',mk).get();
   const cfAll=cfSnap.docs.map(d=>({id:d.id,...d.data()}));
 
   // Next month key
   let nm=m+1, ny=y; if(nm>12){nm=1;ny++;}
   const nmk=monthKey(nm,ny);
 
-  const batch=writeBatch(db);
+  const batch=db.batch();
   let carried=0;
   emps.forEach(emp=>{
     const empTx=txAll.filter(t=>t.iqamaNo===emp.iqamaNo);
     const cf=cfAll.find(c=>c.iqamaNo===emp.iqamaNo);
     const dues=calcDuesFromTx(empTx,cf?.amount||0);
     if(dues.totalDues>0){
-      const ref=doc(collection(db,'carryForward'));
+      const ref=db.collection('carryForward').doc();
       batch.set(ref,{iqamaNo:emp.iqamaNo,name:emp.name,monthKey:nmk,month:nm,year:ny,amount:dues.totalDues,closedFrom:mk,createdAt:new Date().toISOString()});
       carried++;
     }
@@ -1540,9 +1563,9 @@ async function runMonthEnd() {
   toast('تم إغلاق الشهر. ترحيل: '+carried+' موظف','ok');
 }
 
-// ══════════════════════════════════════════
+// ===
 // BOOT
-// ══════════════════════════════════════════
+// ===
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(S.theme);
 
@@ -1613,7 +1636,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-</script>
 
+
+</script>
 </body>
 </html>
