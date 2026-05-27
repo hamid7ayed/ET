@@ -129,16 +129,30 @@ async function doLogin() {
   const btn = document.getElementById('login-btn');
   btn.textContent='...'; btn.disabled=true;
   try {
-    const users = await fsWhere('users','username','==',username);
-    const user = users.find(u=>u.password===password);
-    if (!user) { toast('بيانات غير صحيحة / Invalid credentials','err'); btn.textContent='دخول / Login'; btn.disabled=false; return; }
+    // Get ALL users and filter client-side to avoid Firestore index requirement
+    const allUsers = await fsAll('users');
+    console.log('All users found:', allUsers.length, allUsers);
+    const user = allUsers.find(u =>
+      String(u.username).trim().toLowerCase() === username.toLowerCase() &&
+      String(u.password).trim() === password
+    );
+    console.log('Matched user:', user);
+    if (!user) {
+      toast('بيانات غير صحيحة / Invalid credentials','err');
+      btn.textContent='دخول / Login'; btn.disabled=false;
+      return;
+    }
     S.user = user;
     await loadMasterData();
     setupMainUI();
     show('screen-main');
     switchTab('list');
+    loadEmployees();
     toast('مرحباً '+username+' 👋','ok');
-  } catch(e) { toast('خطأ: '+e.message,'err'); }
+  } catch(e) {
+    console.error('Login error:', e);
+    toast('خطأ في الاتصال: '+e.message,'err');
+  }
   btn.textContent='دخول / Login'; btn.disabled=false;
 }
 
@@ -157,7 +171,7 @@ async function loadMasterData() {
     fsAll('sites'),
     fsAll('jobTitles')
   ]);
-  S.employees = emps.filter(e=>e.status==='active');
+  S.employees = emps; // keep all, filter in renderEmpList
   S.sites     = sites.map(s=>s.name).filter(Boolean);
   S.jobTitles = jobs.map(j=>j.name).filter(Boolean);
 }
@@ -202,6 +216,9 @@ function fillDropdown(id, items, selected) {
 // ══════════════════════════════════════════
 async function loadEmployees() {
   loading('emp-list');
+  // Reload fresh from Firestore each time
+  const snap = await fsAll('employees');
+  S.employees = snap;
   let emps = S.employees;
   if (S.user.role==='site_head') emps = emps.filter(e=>e.site===S.user.site);
 
@@ -217,9 +234,10 @@ async function loadEmployees() {
 
   S.cache.empDues = {};
   emps.forEach(emp=>{
-    const empTx = txList.filter(t=>t.iqamaNo===emp.iqamaNo);
-    const cf    = cfList.find(c=>c.iqamaNo===emp.iqamaNo);
-    S.cache.empDues[emp.iqamaNo] = calcDuesFromTx(empTx, cf?.amount||0);
+    const eid = String(emp.iqamaNo).trim();
+    const empTx = txList.filter(t=>String(t.iqamaNo).trim()===eid);
+    const cf    = cfList.find(cf=>String(cf.iqamaNo).trim()===eid);
+    S.cache.empDues[eid] = calcDuesFromTx(empTx, cf?.amount||0);
   });
 
   renderEmpList(emps);
@@ -241,6 +259,8 @@ function calcDuesFromTx(txList, carryFwd=0) {
 }
 
 function renderEmpList(emps) {
+  // Filter active employees only
+  emps = emps.filter(e => (e.status||'active') === 'active');
   const q = document.getElementById('search-box').value.toLowerCase();
   const filtered = q ? emps.filter(e=>
     e.name.toLowerCase().includes(q)||
@@ -264,7 +284,7 @@ function renderEmpList(emps) {
   }
 
   document.getElementById('emp-list').innerHTML = alertHtml + filtered.map(emp=>{
-    const dues = S.cache.empDues[emp.iqamaNo];
+    const dues = S.cache.empDues[String(emp.iqamaNo).trim()];
     const d = dues ? dues.totalDues : 0;
     const bc = !dues ? 'badge-dim' : d<=0 ? 'badge-grn' : 'badge-red';
     const flags = dues && d > parseFloat(emp.salary) ? ' 🚨' : '';
