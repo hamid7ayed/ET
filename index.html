@@ -597,7 +597,7 @@ function generatePayslip() {
     +'.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}'
     +'.total{font-size:16px;font-weight:bold;padding:12px 0;border-top:2px solid #333}'
     +'.red{color:#e53935}.grn{color:#43a047}'
-    +'@media print{body{padding:10px}}</style></head><body>'
+    +'@media print{body{padding:10px}}\x3C/style>\x3C/head><body>'
     +'<h2>بيان راتب / Payslip</h2>'
     +'<div class="sub">'+MONTHS_SHORT[d.month]+' '+d.year+'</div>'
     +'<div class="row"><span>الاسم / Name</span><span>'+emp.name+'</span></div>'
@@ -831,7 +831,7 @@ function printReport() {
     +'<style>body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h2{font-size:15px}'
     +'.row{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}.s{background:#f5f5f5;padding:6px 12px;border-radius:5px}'
     +'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#222;color:#fff;padding:7px;text-align:right}'
-    +'td{padding:6px 7px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}</style></head><body>'
+    +'td{padding:6px 7px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}\x3C/style>\x3C/head><body>'
     +'<h2>تقرير المستحقات — '+MONTHS_SHORT[d.month]+' '+d.year+'</h2>'
     +'<div class="row"><div class="s">الموظفون: <b>'+d.summary.length+'</b></div><div class="s">المستحقات: <b>'+sar(totalDues)+'</b></div><div class="s">المصروف: <b>'+sar(totalPaid)+'</b></div></div>'
     +'<table><tr><th>الاسم</th><th>الإقامة</th><th>الموقع</th><th>ترحيل</th><th>سلف</th><th>مصاريف</th><th>مدفوع</th><th>المستحقات</th><th>صافي</th></tr>'+rows+'</table>'
@@ -1119,6 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 });
 </script>
+
 </head>
 <body>
 
@@ -1330,6 +1331,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
+
 /* ══════════════════════════════════════════
    CSS VARIABLES — DARK & LIGHT THEMES
 ══════════════════════════════════════════ */
@@ -1345,136 +1347,6 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 /* Light mode specific overrides for better readability */
-[data-theme="light"] .emp-name,
-[data-theme="light"] .detail-name,
-[data-theme="light"] .topbar-name,
-[data-theme="light"] .stat-val,
-[data-theme="light"] .dues-total .amount,
-[data-theme="light"] .site-item span,
-[data-theme="light"] .dash-row div { color: var(--txt); }
-
-[data-theme="light"] .emp-iqama,
-[data-theme="light"] .detail-iqama { color: var(--acc); }
-
-[data-theme="light"] .emp-meta,
-[data-theme="light"] .detail-meta,
-[data-theme="light"] .emp-site,
-[data-theme="light"] .stat-lbl,
-[data-theme="light"] .dues-box h3,
-[data-theme="light"] .field label,
-[data-theme="light"] .section h3,
-[data-theme="light"] .topbar-role,
-[data-theme="light"] .tab { color: var(--txt2); font-weight:500; }
-
-[data-theme="light"] .tab.active { color: var(--acc); font-weight:700; }
-
-[data-theme="light"] .card,
-[data-theme="light"] .dues-box,
-[data-theme="light"] .emp-card,
-[data-theme="light"] .stat-card,
-[data-theme="light"] .site-card,
-[data-theme="light"] .dash-tbl,
-[data-theme="light"] .login-card,
-[data-theme="light"] .login-logo,
-[data-theme="light"] .sheet {
-  border-color: var(--bdr);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
-}
-
-[data-theme="light"] .field input,
-[data-theme="light"] .field select,
-[data-theme="light"] .search-box,
-[data-theme="light"] .filter-select {
-  background: #fff;
-  border-color: #b0b8d0;
-  color: var(--txt);
-  font-weight: 500;
-}
-
-[data-theme="light"] .topbar {
-  background: #fff;
-  border-bottom: 2px solid var(--bdr);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
-}
-
-[data-theme="light"] .tabs {
-  background: #fff;
-  border-bottom: 2px solid var(--bdr);
-}
-
-[data-theme="light"] .dues-box {
-  background: linear-gradient(135deg, rgba(45,91,227,.06), rgba(14,143,106,.04));
-}
-
-[data-theme="light"] .dues-item .lbl { color: #3a4060; font-weight:600; }
-[data-theme="light"] .dues-item .val { font-weight:700; }
-
-[data-theme="light"] .alert-box {
-  background: rgba(201,112,0,.1);
-  border-color: rgba(201,112,0,.4);
-  color: #8a4d00;
-  font-weight: 600;
-}
-
-[data-theme="light"] .dash-hdr {
-  background: #e2e5f0;
-  color: #3a4060;
-  font-weight: 700;
-}
-
-[data-theme="light"] .dash-row { border-bottom-color: #d0d5e8; }
-[data-theme="light"] .dash-row:active { background: #e8ebf5; }
-
-[data-theme="light"] .month-nav { background:#fff; border-color:var(--bdr); }
-[data-theme="light"] .month-nav span { color: var(--txt); font-weight:700; }
-
-[data-theme="light"] .btn-ghost {
-  background: #e8ebf5;
-  border-color: #b8bdd8;
-  color: #1a1d2e;
-  font-weight: 600;
-}
-
-[data-theme="light"] .btn-logout {
-  border-color: #b8bdd8;
-  color: #3a4060;
-  font-weight: 600;
-}
-
-[data-theme="light"] .badge-dim {
-  background: #e2e5f0;
-  border-color: #c2c8de;
-  color: #3a4060;
-  font-weight: 700;
-}
-
-[data-theme="light"] .badge-red { font-weight:700; }
-[data-theme="light"] .badge-grn { font-weight:700; }
-
-[data-theme="light"] .info-row {
-  background: rgba(45,91,227,.06);
-  border-color: rgba(45,91,227,.25);
-  color: var(--txt);
-}
-
-[data-theme="light"] #toast {
-  background: #fff;
-  border-color: var(--bdr);
-  color: var(--txt);
-  box-shadow: 0 4px 16px rgba(0,0,0,.15);
-}
-
-[data-theme="light"] .section h3 {
-  border-bottom-color: var(--bdr);
-  font-weight: 700;
-}
-
-[data-theme="light"] .login-logo-text h1 { color: var(--txt); font-weight:800; }
-[data-theme="light"] .login-logo-text p  { color: var(--txt2); font-weight:500; }
-
-[data-theme="light"] .mono { font-weight:700; }
-
-[data-theme="light"] .emp-av { box-shadow: 0 2px 8px rgba(45,91,227,.2); }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;overflow-x:hidden;transition:background .3s,color .3s}
@@ -1607,6 +1479,138 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-
 .spin{width:17px;height:17px;border:2px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:32px 16px;color:var(--txt2);font-size:13px}
+
+[data-theme="light"] .emp-name,
+[data-theme="light"] .detail-name,
+[data-theme="light"] .topbar-name,
+[data-theme="light"] .stat-val,
+[data-theme="light"] .dues-total .amount,
+[data-theme="light"] .site-item span,
+[data-theme="light"] .dash-row div { color: var(--txt); }
+
+[data-theme="light"] .emp-iqama,
+[data-theme="light"] .detail-iqama { color: var(--acc); }
+
+[data-theme="light"] .emp-meta,
+[data-theme="light"] .detail-meta,
+[data-theme="light"] .emp-site,
+[data-theme="light"] .stat-lbl,
+[data-theme="light"] .dues-box h3,
+[data-theme="light"] .field label,
+[data-theme="light"] .section h3,
+[data-theme="light"] .topbar-role,
+[data-theme="light"] .tab { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .tab.active { color: var(--acc); font-weight:700; }
+
+[data-theme="light"] .card,
+[data-theme="light"] .dues-box,
+[data-theme="light"] .emp-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .site-card,
+[data-theme="light"] .dash-tbl,
+[data-theme="light"] .login-card,
+[data-theme="light"] .login-logo,
+[data-theme="light"] .sheet {
+  border-color: var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .field input,
+[data-theme="light"] .field select,
+[data-theme="light"] .search-box,
+[data-theme="light"] .filter-select {
+  background: #fff;
+  border-color: #b0b8d0;
+  color: var(--txt);
+  font-weight: 500;
+}
+
+[data-theme="light"] .topbar {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .tabs {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+}
+
+[data-theme="light"] .dues-box {
+  background: linear-gradient(135deg, rgba(45,91,227,.06), rgba(14,143,106,.04));
+}
+
+[data-theme="light"] .dues-item .lbl { color: #3a4060; font-weight:600; }
+[data-theme="light"] .dues-item .val { font-weight:700; }
+
+[data-theme="light"] .alert-box {
+  background: rgba(201,112,0,.1);
+  border-color: rgba(201,112,0,.4);
+  color: #8a4d00;
+  font-weight: 600;
+}
+
+[data-theme="light"] .dash-hdr {
+  background: #e2e5f0;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .dash-row { border-bottom-color: #d0d5e8; }
+[data-theme="light"] .dash-row:active { background: #e8ebf5; }
+
+[data-theme="light"] .month-nav { background:#fff; border-color:var(--bdr); }
+[data-theme="light"] .month-nav span { color: var(--txt); font-weight:700; }
+
+[data-theme="light"] .btn-ghost {
+  background: #e8ebf5;
+  border-color: #b8bdd8;
+  color: #1a1d2e;
+  font-weight: 600;
+}
+
+[data-theme="light"] .btn-logout {
+  border-color: #b8bdd8;
+  color: #3a4060;
+  font-weight: 600;
+}
+
+[data-theme="light"] .badge-dim {
+  background: #e2e5f0;
+  border-color: #c2c8de;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .badge-red { font-weight:700; }
+[data-theme="light"] .badge-grn { font-weight:700; }
+
+[data-theme="light"] .info-row {
+  background: rgba(45,91,227,.06);
+  border-color: rgba(45,91,227,.25);
+  color: var(--txt);
+}
+
+[data-theme="light"] #toast {
+  background: #fff;
+  border-color: var(--bdr);
+  color: var(--txt);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+[data-theme="light"] .section h3 {
+  border-bottom-color: var(--bdr);
+  font-weight: 700;
+}
+
+[data-theme="light"] .login-logo-text h1 { color: var(--txt); font-weight:800; }
+[data-theme="light"] .login-logo-text p  { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .mono { font-weight:700; }
+
+[data-theme="light"] .emp-av { box-shadow: 0 2px 8px rgba(45,91,227,.2); }
+
 </style>
 </body>
 </html>
