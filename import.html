@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Import Tool — Employee Tracker</title>
+<style>
+body{font-family:monospace;background:#0f1117;color:#eef0f8;padding:20px;max-width:600px;margin:0 auto}
+h2{font-size:18px;margin-bottom:4px;color:#4f7fff}
+p{font-size:13px;color:#8b90a8;margin-bottom:20px}
+.btn{background:#4f7fff;color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;cursor:pointer;width:100%;margin-bottom:10px;font-family:monospace}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-danger{background:#ff5252}
+#log{background:#1a1d27;border:1px solid #2e3347;border-radius:10px;padding:16px;margin-top:16px;font-size:12px;min-height:120px;white-space:pre-wrap;max-height:400px;overflow-y:auto}
+.ok{color:#38e8c0}.err{color:#ff5252}.info{color:#ffb142}
+.progress{background:#2e3347;border-radius:6px;height:8px;margin:10px 0;overflow:hidden}
+.progress-bar{background:#4f7fff;height:100%;width:0%;transition:width .3s;border-radius:6px}
+</style>
+</head>
+<body>
+<h2>🚀 Firestore Import Tool</h2>
+<p>This will import all employees, sites, users, and transactions into Firebase in one click.</p>
+<div class="progress"><div class="progress-bar" id="progress"></div></div>
+<button class="btn" id="btn-import">Import All Data</button>
+<button class="btn btn-danger" id="btn-clear" style="display:none">⚠️ Clear All Data (Danger)</button>
+<div id="log">Ready to import...
+
+Summary:
+- Users: 18
+- Sites: 16
+- Employees: 80
+- Transactions: 8
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDO7ad5jHj5jfjWJCaTRSgJrse2QyF4dqA",
+  authDomain: "employee-tracker-8975f.firebaseapp.com",
+  projectId: "employee-tracker-8975f",
+  storageBucket: "employee-tracker-8975f.firebasestorage.app",
+  messagingSenderId: "653703256066",
+  appId: "1:653703256066:web:9f3b0eb398514948c72f1b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const DATA = {"users": [{"username": "s1", "password": "pass123", "role": "site_head", "site": "Shabab-1"}, {"username": "s2", "password": "pass123", "role": "site_head", "site": "Shabab-2"}, {"username": "s3", "password": "pass123", "role": "site_head", "site": "Shabab-3"}, {"username": "s4", "password": "pass123", "role": "site_head", "site": "Shabab-4"}, {"username": "s5", "password": "pass123", "role": "site_head", "site": "Shabab-5"}, {"username": "s6", "password": "pass123", "role": "site_head", "site": "Shabab-6"}, {"username": "s7", "password": "pass123", "role": "site_head", "site": "Shabab-7"}, {"username": "s8", "password": "pass123", "role": "site_head", "site": "Shabab-8"}, {"username": "s9", "password": "pass123", "role": "site_head", "site": "Shabab-9"}, {"username": "l1", "password": "pass123", "role": "site_head", "site": "Like-1"}, {"username": "l2", "password": "pass123", "role": "site_head", "site": "Like-2"}, {"username": "l3", "password": "pass123", "role": "site_head", "site": "Like-3"}, {"username": "l4", "password": "pass123", "role": "site_head", "site": "Like-4"}, {"username": "l5", "password": "pass123", "role": "site_head", "site": "Like-5"}, {"username": "l6", "password": "pass123", "role": "site_head", "site": "Like-6"}, {"username": "sh", "password": "sh123", "role": "office", "site": "ALL"}, {"username": "ma", "password": "ma123", "role": "accounts", "site": "ALL"}, {"username": "sa", "password": "sa786", "role": "accounts", "site": "ALL"}], "sites": [{"name": "Shabab-1"}, {"name": "Shabab-2"}, {"name": "Shabab-3"}, {"name": "Shabab-4"}, {"name": "Shabab-5"}, {"name": "Shabab-6"}, {"name": "Shabab-7"}, {"name": "Shabab-8"}, {"name": "Shabab-9"}, {"name": "Like-1"}, {"name": "Like-2"}, {"name": "Like-3"}, {"name": "Like-4"}, {"name": "Like-5"}, {"name": "Like-6"}, {"name": "AlKhair"}], "employees": [{"iqamaNo": "2560328425", "name": "TAWAB GUL KHAN GUL", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2356333381", "name": "HAROON AHMED BASHIR AHMED", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2491831265", "name": "SHAH ZEB KHAN SAKHI ZAMAN", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516642325", "name": "RAAZ WALI LALAK KHAN", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2555478243", "name": "AMIR SHAH PANIA GULL", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2505895694", "name": "JAMAL HOSSAIN", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516647613", "name": "NOOR ZAHID MAIL KHAN", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516643869", "name": "HASHMAT ULLAH MAIL KHAN", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2602504819", "name": "MUHAMMAD HAROON KHAYAL MUHAMMAD", "site": "Shabab-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2326793011", "name": "NOOR ALI JAN SYED HUSSAIN", "site": "Shabab-2", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2502626126", "name": "KHAN WALI WAZIR", "site": "Shabab-2", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2291951495", "name": "ABDUL REHMAN FARID BAKHSH", "site": "Shabab-2", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2570854881", "name": "MUHAMMAD NABI MUHIB ULLAH KHAN", "site": "Shabab-2", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2220020768", "name": "عبدالحق", "site": "Shabab-2", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516644248", "name": "ABDULLAH RAMBAIL SHAH", "site": "Shabab-3", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2112586165", "name": "MOHAMMAD RAFIQ MEHRABAN", "site": "Shabab-3", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2586486983", "name": "MOHIB ULLAH - MIR SAID KHAN", "site": "Shabab-3", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2313885283", "name": "رشيد علي محمد سليمان", "site": "Shabab-4", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2505895421", "name": "JUWEL RANA", "site": "Shabab-4", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2575566969", "name": "FAIZAN ASIF ASIF KHAN", "site": "Shabab-4", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516645773", "name": "AHMED ULLAH HAKMIAT ULLAH", "site": "Shabab-4", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2534582990", "name": "MUNIR AHMAD UMAR DARAZ", "site": "Shabab-4", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2555250956", "name": "Zahid Ullah Anwar", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2556392633", "name": "USAMA MUHAMMAD AMAN", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2289626695", "name": "JUMA KHAN GULA KHAN", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2389673753", "name": "AMJAD KHAN JANAT GUL", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2414017414", "name": "FAISAL ABDUL JABBAR", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2535097139", "name": "ZUBAIR KHAN KHAN GUL", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2575342072", "name": "SHAKIR KHAN KHAYAL MUHAMMAD", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2392474116", "name": "SALMAN KHAN NIAMAT GUL", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2545694214", "name": "FAISAL MEHMOOD GHULAM MUHAMMAD", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2570854683", "name": "NAJEEB ULLAH ABDUL SALAAM", "site": "Shabab-5", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2095918534", "name": "JHNGIR - - KHAN", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2519221036", "name": "AMAN ULLAH MUHAMMAD TARIQ", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2484256561", "name": "MAHBOB ALAM", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516646060", "name": "SAIF UD DIN FAZAL UR REHMAN", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2590854689", "name": "AMANULLAH - MUHAMMAD RAFIQUE", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2504312758", "name": "ZAKIR ULLAH SAGBAT KHAN", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2590294563", "name": "SHAHID ULLAH MUHAMMAD ANWAR", "site": "Shabab-6", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516644578", "name": "MUSA KHAN MAIL KHAN", "site": "Shabab-7", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2388748424", "name": "KAMRAN ALI AMAN ULLAH", "site": "Shabab-7", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2526146937", "name": "FAROOQ KHAN SALAM JAN", "site": "Shabab-7", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2365861406", "name": "MUHAMMAD RAUF MUHAMMAD FAROOQ", "site": "Shabab-7", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2480859012", "name": "MOHAMMAD SADEK HOSSAIN", "site": "Shabab-7", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2570118519", "name": "MUHAMMAD IQBAL MUHAMMAD AYOUB", "site": "Shabab-7", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2559799479", "name": "Muhammad Yousaf Dad", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2547425955", "name": "Abdullah Khan", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2506378674", "name": "Muhammad ismail Lal bahadar", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2551186071", "name": "نصرت الله شمالي خان", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2178772402", "name": "MOHAMMAD ZAHIR HAJI TAHIR", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2176883128", "name": "MOHAMMAD - - AGHAJAN", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2526160904", "name": "SOHAIL AHMAD MUHAMMAD FAYYAZ", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2516643489", "name": "NOOR UR REHMAN FAZAL AKBAR", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2573657653", "name": "ISMAIL ILYAS KHAN", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2602504694", "name": "ASAD ULLAH GHULAM MUHAMMAD", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2543679464", "name": "HAZRAT BILAL MOLA DAD", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2120620964", "name": "MOHAMMEDABDULRA - - KHAN", "site": "Shabab-8", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2519240135", "name": "GHULAM SAEED GHULAM MURTAZA", "site": "Shabab-9", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2613955612", "name": "Javed Khan Bashir Khan", "site": "Shabab-9", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2547426284", "name": "Muhammad Rehman", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2549654743", "name": "Sharif ullah Khan", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2549653398", "name": "Abdul Momin Ullah", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2549654537", "name": "Khayal Khan Khan", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2613955612", "name": "Mohamamdn Mohamamdn Alam", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2196483107", "name": "Nabat Khan", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2555250303", "name": "Abdul ur Rehman Khan", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2493143214", "name": "Mahbat Khan Aurangzeb", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2320056506", "name": "JAWAD KHAN SHAH GUL", "site": "Like-1", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2504542289", "name": "Syed Haneef", "site": "AlKhair", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2326603301", "name": "Muhammad Haroon Rafiq", "site": "AlKhair", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2173288693", "name": "Nurul hoqve", "site": "AlKhair", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2183556238", "name": "Faza Karim Gulahmad", "site": "AlKhair", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2155254978", "name": "Ashikmiah Abdulmosabbir", "site": "AlKhair", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2303967661", "name": "OMAR RAHMATULLAH", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2368683658", "name": "mohamed saddam", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2315771838", "name": "nadar zar muhammad", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2581693849", "name": "HABIB ULREHMAN HABIB ULLAH", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2545693638", "name": "KHAIR ULLAH MUHAMMAD HANIF", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2581694102", "name": "MUHAMMAD ALI KHAN AWAN MAZAHR", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}, {"iqamaNo": "2601188077", "name": "Aalamin Hossen", "site": "None", "salary": 3000.0, "status": "active", "shortName": "", "passportNo": "", "phone": "", "jobTitle": ""}], "transactions": [{"iqamaNo": "1234567890", "type": "advance", "amount": 1500.0, "monthKey": "2026-05", "month": 5, "year": 2026, "notes": "دفع مقدم", "addedBy": "s4", "createdAt": "2026-05-26T14:23:29.176Z"}, {"iqamaNo": "1234567890", "type": "advance", "amount": 500.0, "monthKey": "2026-05", "month": 5, "year": 2026, "notes": "دفع مقدم", "addedBy": "s4", "createdAt": "2026-05-26T14:58:55.747Z"}, {"iqamaNo": "478899559", "type": "advance", "amount": 500.0, "monthKey": "2026-05", "month": 5, "year": 2026, "notes": "دفع مقدم", "addedBy": "ma", "createdAt": "2026-05-26T15:04:27.842Z"}, {"iqamaNo": "1234567890", "type": "expense", "amount": 2500.0, "monthKey": "2026-05", "month": 5, "year": 2026, "notes": "اقامة", "addedBy": "sa", "createdAt": "2026-05-26T14:26:34.154Z"}, {"iqamaNo": "478899559", "type": "expense", "amount": 2500.0, "monthKey": "2026-05", "month": 5, "year": 2026, "notes": "اقامة", "addedBy": "ma", "createdAt": "2026-05-26T15:04:44.229Z"}, {"iqamaNo": "1234567890", "type": "salary", "amount": 3000.0, "monthKey": "2026-05", "month": 5, "year": 2026, "processedBy": "s4", "createdAt": "2026-05-26T14:23:48.298Z"}, {"iqamaNo": "478899559", "type": "salary", "amount": 500.0, "monthKey": "2026-05", "month": 5, "year": 2026, "processedBy": "ma", "createdAt": "2026-05-26T15:05:00.384Z"}, {"iqamaNo": "97989798797", "type": "salary", "amount": 3000.0, "monthKey": "2026-05", "month": 5, "year": 2026, "processedBy": "ma", "createdAt": "2026-04-30T21:00:00.000Z"}]};
+
+function log(msg, type) {
+  const el = document.getElementById('log');
+  el.innerHTML += '<span class="'+(type||'')+'">' + msg + '</span>\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('progress').style.width = pct + '%';
+}
+
+async function importCollection(name, items, labelField) {
+  log('Importing ' + items.length + ' ' + name + '...', 'info');
+  const batch = writeBatch(db);
+  let count = 0;
+  for (const item of items) {
+    const ref = doc(collection(db, name));
+    batch.set(ref, { ...item, createdAt: new Date().toISOString() });
+    count++;
+    // Firestore batch limit is 500
+    if (count % 490 === 0) {
+      await batch.commit();
+      log('  Batch committed (' + count + ')');
+    }
+  }
+  await batch.commit();
+  log('  ✓ ' + items.length + ' ' + name + ' imported', 'ok');
+}
+
+document.getElementById('btn-import').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-import');
+  btn.disabled = true;
+  btn.textContent = 'Importing...';
+  document.getElementById('log').textContent = 'Starting import...\n';
+
+  try {
+    setProgress(10);
+    await importCollection('sites', DATA.sites, 'name');
+    setProgress(25);
+
+    await importCollection('users', DATA.users, 'username');
+    setProgress(45);
+
+    await importCollection('employees', DATA.employees, 'name');
+    setProgress(70);
+
+    await importCollection('transactions', DATA.transactions, 'type');
+    setProgress(100);
+
+    log('\n✅ IMPORT COMPLETE!', 'ok');
+    log('Users: ' + DATA.users.length, 'ok');
+    log('Sites: ' + DATA.sites.length, 'ok');
+    log('Employees: ' + DATA.employees.length, 'ok');
+    log('Transactions: ' + DATA.transactions.length, 'ok');
+    log('\nYou can now login to the main app!', 'ok');
+    btn.textContent = '✅ Done!';
+    document.getElementById('btn-clear').style.display = 'block';
+  } catch(e) {
+    log('\n❌ ERROR: ' + e.message, 'err');
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'Retry Import';
+  }
+});
+
+document.getElementById('btn-clear').addEventListener('click', async () => {
+  if (!confirm('This will DELETE all data from Firestore. Are you sure?')) return;
+  const cols = ['users','sites','employees','transactions','carryForward'];
+  for (const col of cols) {
+    const snap = await getDocs(collection(db, col));
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    log('Cleared ' + col, 'err');
+  }
+  log('All data cleared.', 'err');
+});
+</script>
+</body>
+</html>
