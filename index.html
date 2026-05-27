@@ -836,14 +836,22 @@ async function loadSitesTab() {
   loading('sites-list');
   const sites = await fsAll('sites');
   S.sites = sites.map(s=>s.name).filter(Boolean);
-  if (!sites.length) { document.getElementById('sites-list').innerHTML='<div class="empty">لا توجد مواقع بعد</div>'; return; }
-  document.getElementById('sites-list').innerHTML = sites.map(s=>
-    '<div class="site-item"><span style="font-size:15px;font-weight:600">🏗 '+s.name+'</span>'
-    +'<button class="btn btn-sm btn-ghost" data-del-site="'+s.id+'" style="color:var(--red);border-color:var(--red)">حذف</button></div>'
-  ).join('');
-  document.querySelectorAll('[data-del-site]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{ if(!confirm('حذف؟')) return; await fsDelete('sites',btn.dataset.delSite); toast('تم الحذف','ok'); loadSitesTab(); });
-  });
+  if (!sites.length) {
+    document.getElementById('sites-list').innerHTML='<div class="empty">لا توجد مواقع بعد / No sites yet</div>';
+  } else {
+    document.getElementById('sites-list').innerHTML = sites.map(s=>
+      '<div class="site-item"><span style="font-size:14px;font-weight:600">🏗 '+s.name+'</span>'
+      +'<button class="btn btn-sm btn-ghost" data-del-site="'+s.id+'" style="color:var(--red);border-color:var(--red)">حذف</button></div>'
+    ).join('');
+    document.querySelectorAll('[data-del-site]').forEach(btn=>{
+      btn.addEventListener('click',async()=>{ if(!confirm('حذف الموقع؟')) return; await fsDelete('sites',btn.dataset.delSite); toast('تم الحذف ✓','ok'); loadSitesTab(); });
+    });
+  }
+  // Also refresh dropdowns and load job titles
+  fillDropdown('ae-site', S.sites);
+  fillDropdown('ee-site', S.sites);
+  fillDropdown('nu-site', S.sites);
+  loadJobTitles();
 }
 
 async function addSite() {
@@ -854,6 +862,44 @@ async function addSite() {
   document.getElementById('new-site-inp').value='';
   await loadSitesTab();
   fillDropdown('ae-site',S.sites);
+}
+
+async function loadJobTitles() {
+  const el = document.getElementById('jobs-list');
+  if (!el) return;
+  el.innerHTML = '<div class="loader"><div class="spin"></div></div>';
+  const jobs = await fsAll('jobTitles');
+  S.jobTitles = jobs.map(j=>j.name).filter(Boolean);
+  if (!jobs.length) { el.innerHTML='<div class="empty">لا توجد مسميات بعد / No job titles yet</div>'; return; }
+  el.innerHTML = jobs.map(j=>
+    '<div class="site-item"><span style="font-size:14px;font-weight:600">💼 '+j.name+'</span>'
+    +'<button class="btn btn-sm btn-ghost" data-del-job="'+j.id+'" style="color:var(--red);border-color:var(--red)">حذف</button></div>'
+  ).join('');
+  document.querySelectorAll('[data-del-job]').forEach(btn=>{
+    btn.addEventListener('click', async()=>{
+      if (!confirm('حذف المسمى الوظيفي؟')) return;
+      await fsDelete('jobTitles', btn.dataset.delJob);
+      toast('تم الحذف ✓','ok');
+      loadJobTitles();
+    });
+  });
+  // Refresh dropdowns
+  fillDropdown('ae-jobtitle', S.jobTitles);
+  fillDropdown('ee-jobtitle', S.jobTitles);
+}
+
+async function addJobTitle() {
+  const name = document.getElementById('new-job-inp').value.trim();
+  if (!name) { toast('أدخل المسمى الوظيفي','err'); return; }
+  // Check duplicate
+  if (S.jobTitles.map(j=>j.toLowerCase()).includes(name.toLowerCase())) {
+    toast('المسمى موجود مسبقاً / Already exists','err'); return;
+  }
+  await fsAdd('jobTitles', { name });
+  toast('تم إضافة المسمى ✓','ok');
+  document.getElementById('new-job-inp').value = '';
+  S.jobTitles.push(name);
+  loadJobTitles();
 }
 
 async function loadUsersTab() {
@@ -961,8 +1007,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-print').addEventListener('click', printReport);
   document.getElementById('btn-month-end').addEventListener('click', runMonthEnd);
 
-  // Sites
+  // Sites & Job Titles
   document.getElementById('btn-add-site').addEventListener('click', addSite);
+  document.getElementById('btn-add-job').addEventListener('click', addJobTitle);
 
   // Users
   document.getElementById('btn-add-user').addEventListener('click', addUser);
@@ -1045,11 +1092,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- SITES TAB -->
   <div class="tab-content content" data-tab="sites" style="display:none">
-    <div class="card" style="margin-bottom:14px">
+    <!-- Sites -->
+    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">🏗 المواقع / Sites</div>
+    <div class="card" style="margin-bottom:10px">
       <div class="field" style="margin-bottom:10px"><label>اسم الموقع / Site Name</label><input type="text" id="new-site-inp" placeholder="مثال: Site A"/></div>
-      <button class="btn btn-full btn-primary" id="btn-add-site">إضافة / Add</button>
+      <button class="btn btn-full btn-primary" id="btn-add-site">إضافة موقع / Add Site</button>
     </div>
-    <div id="sites-list"></div>
+    <div id="sites-list" style="margin-bottom:20px"></div>
+    <!-- Job Titles -->
+    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">💼 المسميات الوظيفية / Job Titles</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:10px"><label>المسمى الوظيفي / Job Title</label><input type="text" id="new-job-inp" placeholder="مثال: مشرف / Supervisor"/></div>
+      <button class="btn btn-full btn-primary" id="btn-add-job">إضافة مسمى / Add Title</button>
+    </div>
+    <div id="jobs-list"></div>
   </div>
 
   <!-- USERS TAB -->
