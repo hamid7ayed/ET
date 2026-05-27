@@ -261,6 +261,12 @@ function calcDuesFromTx(txList, carryFwd=0) {
 function renderEmpList(emps) {
   // Filter active employees only
   emps = emps.filter(e => (e.status||'active') === 'active');
+
+  // Site filter
+  const siteFilter = document.getElementById('site-filter')?.value || 'ALL';
+  if (siteFilter !== 'ALL') emps = emps.filter(e => e.site === siteFilter);
+
+  // Search filter
   const q = document.getElementById('search-box').value.toLowerCase();
   const filtered = q ? emps.filter(e=>
     e.name.toLowerCase().includes(q)||
@@ -268,6 +274,10 @@ function renderEmpList(emps) {
     (e.site||'').toLowerCase().includes(q)||
     (e.shortName||'').toLowerCase().includes(q)
   ) : emps;
+
+  // Show count
+  const countEl = document.getElementById('emp-count');
+  if (countEl) countEl.textContent = filtered.length + ' موظف / ' + filtered.length + ' employees';
 
   if (!filtered.length) { document.getElementById('emp-list').innerHTML='<div class="empty">لا توجد نتائج / No results</div>'; return; }
 
@@ -841,10 +851,20 @@ async function loadSitesTab() {
   } else {
     document.getElementById('sites-list').innerHTML = sites.map(s=>
       '<div class="site-item"><span style="font-size:14px;font-weight:600">🏗 '+s.name+'</span>'
-      +'<button class="btn btn-sm btn-ghost" data-del-site="'+s.id+'" style="color:var(--red);border-color:var(--red)">حذف</button></div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button class="btn btn-sm btn-ghost" data-edit-site-id="'+s.id+'" data-edit-site-name="'+s.name+'">تعديل</button>'
+      +'<button class="btn btn-sm btn-ghost" data-del-site="'+s.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
+      +'</div></div>'
     ).join('');
     document.querySelectorAll('[data-del-site]').forEach(btn=>{
       btn.addEventListener('click',async()=>{ if(!confirm('حذف الموقع؟')) return; await fsDelete('sites',btn.dataset.delSite); toast('تم الحذف ✓','ok'); loadSitesTab(); });
+    });
+    document.querySelectorAll('[data-edit-site-id]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.getElementById('edit-site-id').value = btn.dataset.editSiteId;
+        document.getElementById('edit-site-name').value = btn.dataset.editSiteName;
+        openModal('modal-edit-site');
+      });
     });
   }
   // Also refresh dropdowns and load job titles
@@ -873,7 +893,10 @@ async function loadJobTitles() {
   if (!jobs.length) { el.innerHTML='<div class="empty">لا توجد مسميات بعد / No job titles yet</div>'; return; }
   el.innerHTML = jobs.map(j=>
     '<div class="site-item"><span style="font-size:14px;font-weight:600">💼 '+j.name+'</span>'
-    +'<button class="btn btn-sm btn-ghost" data-del-job="'+j.id+'" style="color:var(--red);border-color:var(--red)">حذف</button></div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="btn btn-sm btn-ghost" data-edit-job-id="'+j.id+'" data-edit-job-name="'+j.name+'">تعديل</button>'
+    +'<button class="btn btn-sm btn-ghost" data-del-job="'+j.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
+    +'</div></div>'
   ).join('');
   document.querySelectorAll('[data-del-job]').forEach(btn=>{
     btn.addEventListener('click', async()=>{
@@ -881,6 +904,13 @@ async function loadJobTitles() {
       await fsDelete('jobTitles', btn.dataset.delJob);
       toast('تم الحذف ✓','ok');
       loadJobTitles();
+    });
+  });
+  document.querySelectorAll('[data-edit-job-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('edit-job-id').value = btn.dataset.editJobId;
+      document.getElementById('edit-job-name').value = btn.dataset.editJobName;
+      openModal('modal-edit-job');
     });
   });
   // Refresh dropdowns
@@ -902,17 +932,70 @@ async function addJobTitle() {
   loadJobTitles();
 }
 
+// ══════════════════════════════════════════
+// EDIT SAVE FUNCTIONS
+// ══════════════════════════════════════════
+async function saveSiteEdit() {
+  const id   = document.getElementById('edit-site-id').value;
+  const name = document.getElementById('edit-site-name').value.trim();
+  if (!name) { toast('أدخل اسم الموقع','err'); return; }
+  await fsUpdate('sites', id, { name });
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit-site');
+  loadSitesTab();
+}
+
+async function saveJobEdit() {
+  const id   = document.getElementById('edit-job-id').value;
+  const name = document.getElementById('edit-job-name').value.trim();
+  if (!name) { toast('أدخل المسمى الوظيفي','err'); return; }
+  await fsUpdate('jobTitles', id, { name });
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit-job');
+  loadJobTitles();
+}
+
+async function saveUserEdit() {
+  const id   = document.getElementById('edit-user-id').value;
+  const pass = document.getElementById('edit-user-pass').value.trim();
+  const role = document.getElementById('edit-user-role').value;
+  const site = document.getElementById('edit-user-site').value;
+  const updates = { role, site };
+  if (pass) updates.password = pass; // only update password if provided
+  await fsUpdate('users', id, updates);
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit-user');
+  loadUsersTab();
+}
+
 async function loadUsersTab() {
   loading('users-list');
   const users = await fsAll('users');
   if (!users.length) { document.getElementById('users-list').innerHTML='<div class="empty">لا يوجد مستخدمون</div>'; return; }
   document.getElementById('users-list').innerHTML = users.map(u=>
-    '<div class="site-item"><div><div style="font-size:14px;font-weight:700">'+u.username+'</div>'
-    +'<div style="font-size:11px;color:var(--txt2)">'+(ROLES[u.role]||u.role)+(u.site?' · '+u.site:'')+'</div></div>'
-    +'<button class="btn btn-sm btn-ghost" data-del-user="'+u.id+'" style="color:var(--red);border-color:var(--red)">حذف</button></div>'
+    '<div class="site-item"><div><div style="font-size:14px;font-weight:700">👤 '+u.username+'</div>'
+    +'<div style="font-size:11px;color:var(--txt2)">'+(ROLES[u.role]||u.role)+(u.site&&u.site!=='ALL'?' · '+u.site:'')+'</div></div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="btn btn-sm btn-ghost" data-edit-user=''+JSON.stringify({id:u.id,username:u.username,role:u.role,site:u.site||'ALL'})+''>تعديل</button>'
+    +'<button class="btn btn-sm btn-ghost" data-del-user="'+u.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
+    +'</div></div>'
   ).join('');
   document.querySelectorAll('[data-del-user]').forEach(btn=>{
-    btn.addEventListener('click',async()=>{ if(!confirm('حذف المستخدم؟')) return; await fsDelete('users',btn.dataset.delUser); toast('تم الحذف','ok'); loadUsersTab(); });
+    btn.addEventListener('click',async()=>{ if(!confirm('حذف المستخدم؟')) return; await fsDelete('users',btn.dataset.delUser); toast('تم الحذف ✓','ok'); loadUsersTab(); });
+  });
+  document.querySelectorAll('[data-edit-user]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const u = JSON.parse(btn.dataset.editUser);
+      document.getElementById('edit-user-id').value   = u.id;
+      document.getElementById('edit-user-name-lbl').textContent = u.username;
+      document.getElementById('edit-user-pass').value = '';
+      document.getElementById('edit-user-role').value = u.role;
+      // Populate site dropdown
+      const sel = document.getElementById('edit-user-site');
+      sel.innerHTML = '<option value="ALL">ALL</option>' + S.sites.map(s=>'<option value="'+s+'"'+(s===u.site?' selected':'')+'>'+s+'</option>').join('');
+      sel.value = u.site||'ALL';
+      openModal('modal-edit-user');
+    });
   });
 }
 
@@ -995,8 +1078,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-save-emp').addEventListener('click', saveEmployee);
   document.getElementById('btn-save-edit').addEventListener('click', saveEdit);
 
-  // Search
-  document.getElementById('search-box').addEventListener('input', e=>{ const emps=S.user?.role==='site_head'?S.employees.filter(e=>e.site===S.user.site):S.employees; renderEmpList(emps); });
+  // Search & Site Filter
+  document.getElementById('search-box').addEventListener('input', ()=>{
+    const emps = S.user?.role==='site_head' ? S.employees.filter(e=>e.site===S.user.site) : S.employees;
+    renderEmpList(emps);
+  });
+  document.getElementById('site-filter')?.addEventListener('change', ()=>{
+    const emps = S.user?.role==='site_head' ? S.employees.filter(e=>e.site===S.user.site) : S.employees;
+    renderEmpList(emps);
+  });
+  document.getElementById('btn-clear-filter')?.addEventListener('click', ()=>{
+    document.getElementById('search-box').value = '';
+    const sf = document.getElementById('site-filter');
+    if (sf) sf.value = 'ALL';
+    const emps = S.user?.role==='site_head' ? S.employees.filter(e=>e.site===S.user.site) : S.employees;
+    renderEmpList(emps);
+  });
 
   // Dashboard controls
   document.getElementById('dash-prev').addEventListener('click',()=>{ S.dashMonth--; if(S.dashMonth<1){S.dashMonth=12;S.dashYear--;} updateMonthLbl(); loadDashboard(); });
@@ -1013,6 +1110,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Users
   document.getElementById('btn-add-user').addEventListener('click', addUser);
+  document.getElementById('btn-save-site-edit').addEventListener('click', saveSiteEdit);
+  document.getElementById('btn-save-job-edit').addEventListener('click', saveJobEdit);
+  document.getElementById('btn-save-user-edit').addEventListener('click', saveUserEdit);
   fillDropdown('nu-site', [], '');
 
   // PWA
@@ -1066,6 +1166,13 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- LIST TAB -->
   <div class="tab-content content" data-tab="list">
     <input class="search-box" id="search-box" type="text" placeholder="🔍 بحث / Search..."/>
+    <div style="display:flex;gap:8px;margin-bottom:13px">
+      <select id="site-filter" style="flex:1;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:10px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none">
+        <option value="ALL">كل المواقع / All Sites</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" id="btn-clear-filter" style="white-space:nowrap">مسح / Clear</button>
+    </div>
+    <div id="emp-count" style="font-size:12px;color:var(--txt2);margin-bottom:10px"></div>
     <div id="emp-list"></div>
   </div>
 
@@ -1177,6 +1284,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div id="toast"></div>
 
+<!-- EDIT SITE MODAL -->
+<div class="overlay" id="modal-edit-site">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل موقع / Edit Site</span><button class="sheet-close" data-close="modal-edit-site">×</button></div>
+    <input type="hidden" id="edit-site-id"/>
+    <div class="field"><label>اسم الموقع / Site Name</label><input type="text" id="edit-site-name"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-site-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- EDIT JOB TITLE MODAL -->
+<div class="overlay" id="modal-edit-job">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل مسمى / Edit Job Title</span><button class="sheet-close" data-close="modal-edit-job">×</button></div>
+    <input type="hidden" id="edit-job-id"/>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><input type="text" id="edit-job-name"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-job-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="overlay" id="modal-edit-user">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل مستخدم / Edit User</span><button class="sheet-close" data-close="modal-edit-user">×</button></div>
+    <input type="hidden" id="edit-user-id"/>
+    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">
+      👤 <span id="edit-user-name-lbl" style="color:var(--acc);font-weight:700"></span>
+    </div>
+    <div class="field"><label>كلمة المرور الجديدة / New Password</label><input type="password" id="edit-user-pass" placeholder="اتركه فارغاً للإبقاء على القديم"/></div>
+    <div class="field"><label>الدور / Role</label>
+      <select id="edit-user-role">
+        <option value="admin">مدير / Admin</option>
+        <option value="office">مكتب / Office</option>
+        <option value="accounts">محاسبة / Accounts</option>
+        <option value="site_head">مشرف موقع / Site Head</option>
+      </select>
+    </div>
+    <div class="field"><label>الموقع / Site</label><select id="edit-user-site"><option value="ALL">ALL</option></select></div>
+    <button class="btn btn-full btn-warn" id="btn-save-user-edit">حفظ / Save</button>
+  </div>
+</div>
+
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
@@ -1190,10 +1339,142 @@ document.addEventListener('DOMContentLoaded', () => {
   --txt:#eef0f8;--txt2:#8b90a8;--shadow:0 4px 20px rgba(0,0,0,.4);
 }
 [data-theme="light"]{
-  --bg:#f0f2f8;--sur:#ffffff;--sur2:#e8eaf2;--bdr:#d0d4e8;
-  --acc:#3d6ef5;--grn:#1a9e7a;--red:#e53935;--orn:#e68900;
-  --txt:#1a1d2e;--txt2:#5a607a;--shadow:0 4px 20px rgba(0,0,0,.1);
+  --bg:#eef0f6;--sur:#ffffff;--sur2:#e2e5f0;--bdr:#c2c8de;
+  --acc:#2d5be3;--grn:#0e8f6a;--red:#d32f2f;--orn:#c97000;
+  --txt:#0d0f1a;--txt2:#3a4060;--shadow:0 4px 20px rgba(0,0,0,.12);
 }
+
+/* Light mode specific overrides for better readability */
+[data-theme="light"] .emp-name,
+[data-theme="light"] .detail-name,
+[data-theme="light"] .topbar-name,
+[data-theme="light"] .stat-val,
+[data-theme="light"] .dues-total .amount,
+[data-theme="light"] .site-item span,
+[data-theme="light"] .dash-row div { color: var(--txt); }
+
+[data-theme="light"] .emp-iqama,
+[data-theme="light"] .detail-iqama { color: var(--acc); }
+
+[data-theme="light"] .emp-meta,
+[data-theme="light"] .detail-meta,
+[data-theme="light"] .emp-site,
+[data-theme="light"] .stat-lbl,
+[data-theme="light"] .dues-box h3,
+[data-theme="light"] .field label,
+[data-theme="light"] .section h3,
+[data-theme="light"] .topbar-role,
+[data-theme="light"] .tab { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .tab.active { color: var(--acc); font-weight:700; }
+
+[data-theme="light"] .card,
+[data-theme="light"] .dues-box,
+[data-theme="light"] .emp-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .site-card,
+[data-theme="light"] .dash-tbl,
+[data-theme="light"] .login-card,
+[data-theme="light"] .login-logo,
+[data-theme="light"] .sheet {
+  border-color: var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .field input,
+[data-theme="light"] .field select,
+[data-theme="light"] .search-box,
+[data-theme="light"] .filter-select {
+  background: #fff;
+  border-color: #b0b8d0;
+  color: var(--txt);
+  font-weight: 500;
+}
+
+[data-theme="light"] .topbar {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .tabs {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+}
+
+[data-theme="light"] .dues-box {
+  background: linear-gradient(135deg, rgba(45,91,227,.06), rgba(14,143,106,.04));
+}
+
+[data-theme="light"] .dues-item .lbl { color: #3a4060; font-weight:600; }
+[data-theme="light"] .dues-item .val { font-weight:700; }
+
+[data-theme="light"] .alert-box {
+  background: rgba(201,112,0,.1);
+  border-color: rgba(201,112,0,.4);
+  color: #8a4d00;
+  font-weight: 600;
+}
+
+[data-theme="light"] .dash-hdr {
+  background: #e2e5f0;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .dash-row { border-bottom-color: #d0d5e8; }
+[data-theme="light"] .dash-row:active { background: #e8ebf5; }
+
+[data-theme="light"] .month-nav { background:#fff; border-color:var(--bdr); }
+[data-theme="light"] .month-nav span { color: var(--txt); font-weight:700; }
+
+[data-theme="light"] .btn-ghost {
+  background: #e8ebf5;
+  border-color: #b8bdd8;
+  color: #1a1d2e;
+  font-weight: 600;
+}
+
+[data-theme="light"] .btn-logout {
+  border-color: #b8bdd8;
+  color: #3a4060;
+  font-weight: 600;
+}
+
+[data-theme="light"] .badge-dim {
+  background: #e2e5f0;
+  border-color: #c2c8de;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .badge-red { font-weight:700; }
+[data-theme="light"] .badge-grn { font-weight:700; }
+
+[data-theme="light"] .info-row {
+  background: rgba(45,91,227,.06);
+  border-color: rgba(45,91,227,.25);
+  color: var(--txt);
+}
+
+[data-theme="light"] #toast {
+  background: #fff;
+  border-color: var(--bdr);
+  color: var(--txt);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+[data-theme="light"] .section h3 {
+  border-bottom-color: var(--bdr);
+  font-weight: 700;
+}
+
+[data-theme="light"] .login-logo-text h1 { color: var(--txt); font-weight:800; }
+[data-theme="light"] .login-logo-text p  { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .mono { font-weight:700; }
+
+[data-theme="light"] .emp-av { box-shadow: 0 2px 8px rgba(45,91,227,.2); }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;overflow-x:hidden;transition:background .3s,color .3s}
