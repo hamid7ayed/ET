@@ -609,8 +609,15 @@ async function fsGet(col, id) {
   return d.exists ? { id:d.id, ...d.data() } : null;
 }
 async function fsAll(col) {
-  const snap = await db.collection(col).get();
-  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  try {
+    console.log('fsAll called for:', col);
+    const snap = await db.collection(col).get();
+    console.log('fsAll result for', col, ':', snap.size, 'docs');
+    return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  } catch(e) {
+    console.error('fsAll error for', col, ':', e.code, e.message);
+    return [];
+  }
 }
 async function fsWhere(col, field, op, val) {
   const snap = await db.collection(col).where(field, op, val).get();
@@ -633,13 +640,22 @@ async function doLogin() {
   const btn = document.getElementById('login-btn');
   btn.textContent='...'; btn.disabled=true;
   try {
-    // Get ALL users and filter client-side to avoid Firestore index requirement
+    console.log('Attempting login for:', username);
+    console.log('Firebase app:', typeof firebase, typeof firebase?.firestore);
+    console.log('DB:', typeof db);
+
+    // Test Firestore connection first
     const allUsers = await fsAll('users');
-    console.log('All users found:', allUsers.length, allUsers);
-    const user = allUsers.find(u =>
-      String(u.username).trim().toLowerCase() === username.toLowerCase() &&
-      String(u.password).trim() === password
-    );
+    console.log('Users collection size:', allUsers.length);
+    console.log('Users data:', JSON.stringify(allUsers));
+
+    const user = allUsers.find(u => {
+      const uMatch = String(u.username||'').trim().toLowerCase() === username.toLowerCase();
+      const pMatch = String(u.password||'').trim() === String(password).trim();
+      console.log('Checking:', u.username, '| uMatch:', uMatch, '| pMatch:', pMatch);
+      return uMatch && pMatch;
+    });
+
     console.log('Matched user:', user);
     if (!user) {
       toast('بيانات غير صحيحة / Invalid credentials','err');
