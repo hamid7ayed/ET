@@ -11,9 +11,502 @@
 <link rel="manifest" href="manifest.json"/>
 <title>متتبع السلف | Employee Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
 
-<!-- Firebase -->
+
+
+/* ══════════════════════════════════════════
+   CSS VARIABLES — DARK & LIGHT THEMES
+══════════════════════════════════════════ */
+:root,[data-theme="dark"]{
+  --bg:#0f1117;--sur:#1a1d27;--sur2:#22263a;--bdr:#2e3347;
+  --acc:#4f7fff;--grn:#38e8c0;--red:#ff5252;--orn:#ffb142;
+  --txt:#eef0f8;--txt2:#8b90a8;--shadow:0 4px 20px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:#eef0f6;--sur:#ffffff;--sur2:#e2e5f0;--bdr:#c2c8de;
+  --acc:#2d5be3;--grn:#0e8f6a;--red:#d32f2f;--orn:#c97000;
+  --txt:#0d0f1a;--txt2:#3a4060;--shadow:0 4px 20px rgba(0,0,0,.12);
+}
+
+/* Light mode specific overrides for better readability */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;overflow-x:hidden;transition:background .3s,color .3s}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* TOPBAR */
+.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{width:34px;height:34px;border-radius:8px;object-fit:cover}
+.topbar-name{font-size:15px;font-weight:700;line-height:1.2}
+.topbar-role{font-size:10px;color:var(--acc);font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:7px}
+.icon-btn{background:none;border:1px solid var(--bdr);border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-logout{background:none;border:1px solid var(--bdr);color:var(--txt2);padding:5px 11px;font-size:12px;border-radius:7px;font-family:'Tajawal',sans-serif;cursor:pointer}
+
+/* TABS */
+.tabs{display:flex;background:var(--sur);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:70px;padding:12px 4px;text-align:center;font-size:11px;font-family:'Tajawal',sans-serif;font-weight:500;color:var(--txt2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .2s}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* CONTENT */
+.content{flex:1;padding:16px;overflow-y:auto}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-appearance:none}
+.btn:active{transform:scale(0.97)}
+.btn-full{width:100%;padding:13px;font-size:15px}
+.btn-sm{padding:7px 13px;font-size:12px}
+.btn-primary{background:var(--acc);color:#fff}
+.btn-success{background:#1db96a;color:#fff}
+.btn-warn{background:var(--orn);color:#fff}
+.btn-ghost{background:var(--sur2);color:var(--txt);border:1px solid var(--bdr)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* FORMS */
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weight:500}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;-webkit-appearance:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--acc)}
+.field-hint{font-size:10px;color:var(--txt2);margin-top:4px}
+
+/* LOGIN */
+#screen-login{justify-content:center;align-items:center;padding:24px 20px;background:radial-gradient(ellipse at top,rgba(79,127,255,.15),transparent 60%)}
+.login-wrap{width:100%;max-width:380px}
+.login-logo{display:flex;align-items:center;gap:16px;background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow)}
+.login-logo img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0}
+.login-logo-text h1{font-size:17px;font-weight:800;line-height:1.3}
+.login-logo-text p{font-size:11px;color:var(--txt2);margin-top:2px}
+.login-card{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+
+/* CARDS */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;padding:14px;margin-bottom:10px}
+
+/* EMPLOYEE LIST */
+.search-box{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;margin-bottom:13px;-webkit-appearance:none}
+.emp-card{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:border-color .15s}
+.emp-card:active{border-color:var(--acc);background:var(--sur2)}
+.emp-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--grn));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:#fff}
+.emp-info{flex:1;min-width:0}
+.emp-name{font-size:14px;font-weight:700}
+.emp-iqama{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--acc);margin-top:2px}
+.emp-meta{font-size:11px;color:var(--txt2);margin-top:1px}
+.badge{padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.badge-red{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.3);color:var(--red)}
+.badge-grn{background:rgba(56,232,192,.1);border:1px solid rgba(56,232,192,.3);color:var(--grn)}
+.badge-dim{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt2)}
+
+/* DETAIL */
+.back-btn{background:none;border:none;color:var(--acc);font-size:13px;font-weight:500;cursor:pointer;padding:0;font-family:'Tajawal',sans-serif;display:flex;align-items:center;gap:5px}
+.detail-header{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--bdr)}
+.detail-name{font-size:20px;font-weight:800;margin-bottom:3px}
+.detail-iqama{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--acc);margin-bottom:3px}
+.detail-meta{font-size:12px;color:var(--txt2)}
+
+/* DUES */
+.dues-box{background:linear-gradient(135deg,rgba(79,127,255,.08),rgba(56,232,192,.05));border:1px solid var(--bdr);border-radius:13px;padding:16px;margin-bottom:16px}
+.dues-box h3{font-size:12px;color:var(--txt2);margin-bottom:12px;font-weight:600}
+.dues-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.dues-item .lbl{font-size:10px;color:var(--txt2);margin-bottom:3px;text-align:center}
+.dues-item .val{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;text-align:center}
+.dues-total{border-top:1px solid var(--bdr);padding-top:11px;text-align:center}
+.dues-total .lbl{font-size:12px;color:var(--txt2)}
+.dues-total .amount{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;margin-top:3px}
+
+/* SECTION */
+.section{margin-bottom:16px}
+.section h3{font-size:13px;color:var(--txt2);margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--bdr)}
+.info-row{background:rgba(79,127,255,.07);border:1px solid rgba(79,127,255,.2);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:13px;line-height:2}
+
+/* DASHBOARD */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.stat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:12px;text-align:center}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;margin-bottom:3px}
+.stat-lbl{font-size:10px;color:var(--txt2)}
+.site-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:13px;margin-bottom:9px}
+.dash-tbl{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
+.dash-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;background:var(--sur2);font-size:10px;color:var(--txt2);font-weight:600;border-bottom:1px solid var(--bdr)}
+.dash-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 12px;border-bottom:1px solid var(--bdr);align-items:start;cursor:pointer;transition:background .12s}
+.dash-row:last-child{border-bottom:none}
+.dash-row:active{background:var(--sur2)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;padding-top:3px}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:9px}
+.month-nav button{background:none;border:none;color:var(--acc);font-size:22px;cursor:pointer;line-height:1;padding:0 5px}
+.month-nav span{font-size:14px;font-weight:700}
+.filter-select{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none}
+.export-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:13px}
+.alert-box{background:rgba(255,178,66,.1);border:1px solid rgba(255,178,66,.35);border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--orn);line-height:1.8}
+
+/* SITES & USERS */
+.site-item{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:200;align-items:flex-end}
+.overlay.open{display:flex}
+.sheet{background:var(--sur);border-radius:18px 18px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;animation:up .25s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.sheet-close{background:var(--sur2);border:none;color:var(--txt2);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:10px 18px;font-size:13px;z-index:999;transition:transform .25s;white-space:nowrap;max-width:86vw;text-align:center;pointer-events:none;box-shadow:var(--shadow)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--grn);color:var(--grn)}
+#toast.err{border-color:var(--red);color:var(--red)}
+
+/* LOADER */
+.loader{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--txt2);gap:9px;font-size:13px}
+.spin{width:17px;height:17px;border:2px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:32px 16px;color:var(--txt2);font-size:13px}
+
+[data-theme="light"] .emp-name,
+[data-theme="light"] .detail-name,
+[data-theme="light"] .topbar-name,
+[data-theme="light"] .stat-val,
+[data-theme="light"] .dues-total .amount,
+[data-theme="light"] .site-item span,
+[data-theme="light"] .dash-row div { color: var(--txt); }
+
+[data-theme="light"] .emp-iqama,
+[data-theme="light"] .detail-iqama { color: var(--acc); }
+
+[data-theme="light"] .emp-meta,
+[data-theme="light"] .detail-meta,
+[data-theme="light"] .emp-site,
+[data-theme="light"] .stat-lbl,
+[data-theme="light"] .dues-box h3,
+[data-theme="light"] .field label,
+[data-theme="light"] .section h3,
+[data-theme="light"] .topbar-role,
+[data-theme="light"] .tab { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .tab.active { color: var(--acc); font-weight:700; }
+
+[data-theme="light"] .card,
+[data-theme="light"] .dues-box,
+[data-theme="light"] .emp-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .site-card,
+[data-theme="light"] .dash-tbl,
+[data-theme="light"] .login-card,
+[data-theme="light"] .login-logo,
+[data-theme="light"] .sheet {
+  border-color: var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .field input,
+[data-theme="light"] .field select,
+[data-theme="light"] .search-box,
+[data-theme="light"] .filter-select {
+  background: #fff;
+  border-color: #b0b8d0;
+  color: var(--txt);
+  font-weight: 500;
+}
+
+[data-theme="light"] .topbar {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .tabs {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+}
+
+[data-theme="light"] .dues-box {
+  background: linear-gradient(135deg, rgba(45,91,227,.06), rgba(14,143,106,.04));
+}
+
+[data-theme="light"] .dues-item .lbl { color: #3a4060; font-weight:600; }
+[data-theme="light"] .dues-item .val { font-weight:700; }
+
+[data-theme="light"] .alert-box {
+  background: rgba(201,112,0,.1);
+  border-color: rgba(201,112,0,.4);
+  color: #8a4d00;
+  font-weight: 600;
+}
+
+[data-theme="light"] .dash-hdr {
+  background: #e2e5f0;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .dash-row { border-bottom-color: #d0d5e8; }
+[data-theme="light"] .dash-row:active { background: #e8ebf5; }
+
+[data-theme="light"] .month-nav { background:#fff; border-color:var(--bdr); }
+[data-theme="light"] .month-nav span { color: var(--txt); font-weight:700; }
+
+[data-theme="light"] .btn-ghost {
+  background: #e8ebf5;
+  border-color: #b8bdd8;
+  color: #1a1d2e;
+  font-weight: 600;
+}
+
+[data-theme="light"] .btn-logout {
+  border-color: #b8bdd8;
+  color: #3a4060;
+  font-weight: 600;
+}
+
+[data-theme="light"] .badge-dim {
+  background: #e2e5f0;
+  border-color: #c2c8de;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .badge-red { font-weight:700; }
+[data-theme="light"] .badge-grn { font-weight:700; }
+
+[data-theme="light"] .info-row {
+  background: rgba(45,91,227,.06);
+  border-color: rgba(45,91,227,.25);
+  color: var(--txt);
+}
+
+[data-theme="light"] #toast {
+  background: #fff;
+  border-color: var(--bdr);
+  color: var(--txt);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+[data-theme="light"] .section h3 {
+  border-bottom-color: var(--bdr);
+  font-weight: 700;
+}
+
+[data-theme="light"] .login-logo-text h1 { color: var(--txt); font-weight:800; }
+[data-theme="light"] .login-logo-text p  { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .mono { font-weight:700; }
+
+[data-theme="light"] .emp-av { box-shadow: 0 2px 8px rgba(45,91,227,.2); }
+
+
+
+</style>
+</head>
+<body>
+
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <img src="logo.png" alt="Logo" onerror="this.style.display='none'"/>
+      <div class="login-logo-text">
+        <h1>متتبع السلف والرواتب</h1>
+        <p>Employee Advance &amp; Salary Tracker</p>
+      </div>
+    </div>
+    <div class="login-card">
+      <div class="field"><label>اسم المستخدم / Username</label><input type="text" id="inp-user" placeholder="username" autocomplete="username"/></div>
+      <div class="field"><label>كلمة المرور / Password</label><input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="btn btn-full btn-primary" id="login-btn">دخول / Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div id="screen-main" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="logo.png" alt="" class="topbar-logo" onerror="this.style.display='none'"/>
+      <div>
+        <div class="topbar-name" id="topbar-name"></div>
+        <div class="topbar-role" id="topbar-role"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-sm btn-ghost" id="btn-add-emp" style="display:none">+ موظف</button>
+      <button class="icon-btn" id="theme-toggle">☀️</button>
+      <button class="btn-logout" id="btn-logout">خروج</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="list">الموظفون</button>
+    <button class="tab" data-tab="dashboard">لوحة التحكم</button>
+    <button class="tab" data-tab="sites">المواقع</button>
+    <button class="tab" data-tab="users">المستخدمون</button>
+  </div>
+
+  <!-- LIST TAB -->
+  <div class="tab-content content" data-tab="list">
+    <input class="search-box" id="search-box" type="text" placeholder="🔍 بحث / Search..."/>
+    <div style="display:flex;gap:8px;margin-bottom:13px">
+      <select id="site-filter" style="flex:1;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:10px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none">
+        <option value="ALL">كل المواقع / All Sites</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" id="btn-clear-filter" style="white-space:nowrap">مسح / Clear</button>
+    </div>
+    <div id="emp-count" style="font-size:12px;color:var(--txt2);margin-bottom:10px"></div>
+    <div id="emp-list"></div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div class="tab-content content" data-tab="dashboard" style="display:none">
+    <div class="month-nav">
+      <button id="dash-prev">‹</button>
+      <span id="dash-month-lbl"></span>
+      <button id="dash-next">›</button>
+    </div>
+    <div style="margin-bottom:12px">
+      <select id="dash-site-filter" class="filter-select">
+        <option value="ALL">كل المواقع / All Sites</option>
+      </select>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-sm btn-ghost" id="btn-csv">📥 CSV</button>
+      <button class="btn btn-sm btn-ghost" id="btn-wa">📲 واتساب</button>
+      <button class="btn btn-sm btn-ghost" id="btn-print">🖨️ طباعة</button>
+      <button class="btn btn-sm btn-ghost" id="btn-month-end">🔒 إغلاق الشهر</button>
+    </div>
+    <div id="dash-content"></div>
+  </div>
+
+  <!-- SITES TAB -->
+  <div class="tab-content content" data-tab="sites" style="display:none">
+    <!-- Sites -->
+    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">🏗 المواقع / Sites</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:10px"><label>اسم الموقع / Site Name</label><input type="text" id="new-site-inp" placeholder="مثال: Site A"/></div>
+      <button class="btn btn-full btn-primary" id="btn-add-site">إضافة موقع / Add Site</button>
+    </div>
+    <div id="sites-list" style="margin-bottom:20px"></div>
+    <!-- Job Titles -->
+    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">💼 المسميات الوظيفية / Job Titles</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:10px"><label>المسمى الوظيفي / Job Title</label><input type="text" id="new-job-inp" placeholder="مثال: مشرف / Supervisor"/></div>
+      <button class="btn btn-full btn-primary" id="btn-add-job">إضافة مسمى / Add Title</button>
+    </div>
+    <div id="jobs-list"></div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div class="tab-content content" data-tab="users" style="display:none">
+    <div class="card" style="margin-bottom:14px">
+      <div class="field"><label>اسم المستخدم / Username</label><input type="text" id="nu-username" placeholder="username"/></div>
+      <div class="field"><label>كلمة المرور / Password</label><input type="password" id="nu-password" placeholder="password"/></div>
+      <div class="field"><label>الدور / Role</label>
+        <select id="nu-role">
+          <option value="">-- اختر --</option>
+          <option value="admin">مدير / Admin</option>
+          <option value="office">مكتب / Office</option>
+          <option value="accounts">محاسبة / Accounts</option>
+          <option value="site_head">مشرف موقع / Site Head</option>
+        </select>
+      </div>
+      <div class="field"><label>الموقع / Site (للمشرف فقط)</label><select id="nu-site"><option value="">ALL</option></select></div>
+      <button class="btn btn-full btn-primary" id="btn-add-user">إضافة مستخدم / Add User</button>
+    </div>
+    <div id="users-list"></div>
+  </div>
+</div>
+
+<!-- ═══ DETAIL ═══ -->
+<div id="screen-detail" class="screen">
+  <div class="topbar">
+    <button class="back-btn" id="btn-back">← رجوع / Back</button>
+    <div class="topbar-right">
+      <button class="icon-btn" id="theme-toggle2" onclick="applyTheme(S.theme==='dark'?'light':'dark')">☀️</button>
+      <button class="btn-logout" id="btn-logout2">خروج</button>
+    </div>
+  </div>
+  <div class="content" id="detail-content"></div>
+</div>
+
+<!-- ═══ ADD EMPLOYEE MODAL ═══ -->
+<div class="overlay" id="modal-add">
+  <div class="sheet">
+    <div class="sheet-title"><span>إضافة موظف / Add Employee</span><button class="sheet-close" data-close="modal-add">×</button></div>
+    <div class="field"><label>الاسم الكامل / Full Name <span style="color:var(--red)">*</span></label><input type="text" id="ae-name"/></div>
+    <div class="field"><label>الاسم المختصر / Short Name</label><input type="text" id="ae-shortname"/></div>
+    <div class="field"><label>رقم الإقامة / Iqama No <span style="color:var(--red)">*</span></label><input type="text" id="ae-iqama" style="font-family:'IBM Plex Mono',monospace"/></div>
+    <div class="field"><label>رقم الجواز / Passport No</label><input type="text" id="ae-passport" style="font-family:'IBM Plex Mono',monospace"/></div>
+    <div class="field"><label>الجوال / Phone</label><input type="tel" id="ae-phone"/></div>
+    <div class="field"><label>الموقع / Site <span style="color:var(--red)">*</span></label><select id="ae-site"></select></div>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><select id="ae-jobtitle"></select></div>
+    <div class="field"><label>الراتب / Salary (SAR) <span style="color:var(--red)">*</span></label><input type="number" id="ae-salary"/></div>
+    <div class="field"><label>انتهاء الإقامة / Iqama Expiry</label><input type="date" id="ae-iqama-expiry"/></div>
+    <button class="btn btn-full btn-primary" id="btn-save-emp">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- ═══ EDIT EMPLOYEE MODAL ═══ -->
+<div class="overlay" id="modal-edit">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل موظف / Edit</span><button class="sheet-close" data-close="modal-edit">×</button></div>
+    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">🪪 <span id="ee-iqama-lbl" style="font-family:'IBM Plex Mono',monospace;color:var(--acc)"></span></div>
+    <div class="field"><label>الاسم / Name</label><input type="text" id="ee-name"/></div>
+    <div class="field"><label>الاسم المختصر / Short Name</label><input type="text" id="ee-shortname"/></div>
+    <div class="field"><label>الجوال / Phone</label><input type="tel" id="ee-phone"/></div>
+    <div class="field"><label>الجواز / Passport</label><input type="text" id="ee-passport" style="font-family:'IBM Plex Mono',monospace"/></div>
+    <div class="field"><label>الموقع / Site</label><select id="ee-site"></select></div>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><select id="ee-jobtitle"></select></div>
+    <div class="field"><label>الراتب / Salary</label><input type="number" id="ee-salary"/></div>
+    <div class="field"><label>انتهاء الإقامة / Iqama Expiry</label><input type="date" id="ee-iqama-expiry"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-edit">حفظ التعديل / Save</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- EDIT SITE MODAL -->
+<div class="overlay" id="modal-edit-site">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل موقع / Edit Site</span><button class="sheet-close" data-close="modal-edit-site">×</button></div>
+    <input type="hidden" id="edit-site-id"/>
+    <div class="field"><label>اسم الموقع / Site Name</label><input type="text" id="edit-site-name"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-site-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- EDIT JOB TITLE MODAL -->
+<div class="overlay" id="modal-edit-job">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل مسمى / Edit Job Title</span><button class="sheet-close" data-close="modal-edit-job">×</button></div>
+    <input type="hidden" id="edit-job-id"/>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><input type="text" id="edit-job-name"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-job-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="overlay" id="modal-edit-user">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل مستخدم / Edit User</span><button class="sheet-close" data-close="modal-edit-user">×</button></div>
+    <input type="hidden" id="edit-user-id"/>
+    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">
+      👤 <span id="edit-user-name-lbl" style="color:var(--acc);font-weight:700"></span>
+    </div>
+    <div class="field"><label>كلمة المرور الجديدة / New Password</label><input type="password" id="edit-user-pass" placeholder="اتركه فارغاً للإبقاء على القديم"/></div>
+    <div class="field"><label>الدور / Role</label>
+      <select id="edit-user-role">
+        <option value="admin">مدير / Admin</option>
+        <option value="office">مكتب / Office</option>
+        <option value="accounts">محاسبة / Accounts</option>
+        <option value="site_head">مشرف موقع / Site Head</option>
+      </select>
+    </div>
+    <div class="field"><label>الموقع / Site</label><select id="edit-user-site"><option value="ALL">ALL</option></select></div>
+    <button class="btn btn-full btn-warn" id="btn-save-user-edit">حفظ / Save</button>
+  </div>
+</div>
+
 <script type="module">
+
+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -592,7 +1085,7 @@ function generatePayslip() {
   const net=d.totalDues>0?Math.max(0,salary-d.totalDues):salary;
   const w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>بيان راتب</title>'
-    +'<style>body{font-family:Arial,sans-serif;padding:30px;font-size:13px;max-width:500px;margin:0 auto}'
+    +'\x3Cstyle>body{font-family:Arial,sans-serif;padding:30px;font-size:13px;max-width:500px;margin:0 auto}'
     +'h2{font-size:18px;text-align:center;margin-bottom:4px}.sub{text-align:center;color:#666;margin-bottom:20px}'
     +'.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}'
     +'.total{font-size:16px;font-weight:bold;padding:12px 0;border-top:2px solid #333}'
@@ -611,7 +1104,7 @@ function generatePayslip() {
     +(d.deductions?'<div class="row"><span>خصومات / Deductions</span><span class="red">'+sar(d.deductions)+'</span></div>':'')
     +(d.bonuses?'<div class="row"><span>مكافآت / Bonuses</span><span class="grn">'+sar(d.bonuses)+'</span></div>':'')
     +'<div class="row total"><span>صافي الراتب / Net Payable</span><span class="grn">'+sar(net)+'</span></div>'
-    +'<script>window.onload=function(){window.print();}<\/script></body></html>');
+    +'<script>window.onload=function(){window.print();}\x3C/script></body></html>');
   w.document.close();
 }
 
@@ -828,14 +1321,14 @@ function printReport() {
   const rows=d.summary.map(e=>'<tr><td>'+e.name+'</td><td>'+e.iqamaNo+'</td><td>'+e.site+'</td><td>'+sar(e.carryFwd)+'</td><td>'+sar(e.advances)+'</td><td>'+sar(e.expenses)+'</td><td>'+sar(e.salaryPaid)+'</td><td><b>'+sar(Math.max(0,e.totalDues))+'</b></td><td>'+sar(e.net)+'</td></tr>').join('');
   const w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير '+MONTHS_SHORT[d.month]+' '+d.year+'</title>'
-    +'<style>body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h2{font-size:15px}'
+    +'\x3Cstyle>body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h2{font-size:15px}'
     +'.row{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}.s{background:#f5f5f5;padding:6px 12px;border-radius:5px}'
     +'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#222;color:#fff;padding:7px;text-align:right}'
     +'td{padding:6px 7px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}\x3C/style>\x3C/head><body>'
     +'<h2>تقرير المستحقات — '+MONTHS_SHORT[d.month]+' '+d.year+'</h2>'
     +'<div class="row"><div class="s">الموظفون: <b>'+d.summary.length+'</b></div><div class="s">المستحقات: <b>'+sar(totalDues)+'</b></div><div class="s">المصروف: <b>'+sar(totalPaid)+'</b></div></div>'
     +'<table><tr><th>الاسم</th><th>الإقامة</th><th>الموقع</th><th>ترحيل</th><th>سلف</th><th>مصاريف</th><th>مدفوع</th><th>المستحقات</th><th>صافي</th></tr>'+rows+'</table>'
-    +'<script>window.onload=function(){window.print();}<\/script></body></html>');
+    +'<script>window.onload=function(){window.print();}\x3C/script></body></html>');
   w.document.close();
 }
 
@@ -1118,499 +1611,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // PWA
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 });
+
+
 </script>
 
-</head>
-<body>
-
-<!-- ═══ LOGIN ═══ -->
-<div id="screen-login" class="screen active">
-  <div class="login-wrap">
-    <div class="login-logo">
-      <img src="logo.png" alt="Logo" onerror="this.style.display='none'"/>
-      <div class="login-logo-text">
-        <h1>متتبع السلف والرواتب</h1>
-        <p>Employee Advance &amp; Salary Tracker</p>
-      </div>
-    </div>
-    <div class="login-card">
-      <div class="field"><label>اسم المستخدم / Username</label><input type="text" id="inp-user" placeholder="username" autocomplete="username"/></div>
-      <div class="field"><label>كلمة المرور / Password</label><input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password"/></div>
-      <button class="btn btn-full btn-primary" id="login-btn">دخول / Login</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MAIN ═══ -->
-<div id="screen-main" class="screen">
-  <div class="topbar">
-    <div class="topbar-left">
-      <img src="logo.png" alt="" class="topbar-logo" onerror="this.style.display='none'"/>
-      <div>
-        <div class="topbar-name" id="topbar-name"></div>
-        <div class="topbar-role" id="topbar-role"></div>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <button class="btn btn-sm btn-ghost" id="btn-add-emp" style="display:none">+ موظف</button>
-      <button class="icon-btn" id="theme-toggle">☀️</button>
-      <button class="btn-logout" id="btn-logout">خروج</button>
-    </div>
-  </div>
-  <div class="tabs">
-    <button class="tab active" data-tab="list">الموظفون</button>
-    <button class="tab" data-tab="dashboard">لوحة التحكم</button>
-    <button class="tab" data-tab="sites">المواقع</button>
-    <button class="tab" data-tab="users">المستخدمون</button>
-  </div>
-
-  <!-- LIST TAB -->
-  <div class="tab-content content" data-tab="list">
-    <input class="search-box" id="search-box" type="text" placeholder="🔍 بحث / Search..."/>
-    <div style="display:flex;gap:8px;margin-bottom:13px">
-      <select id="site-filter" style="flex:1;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:10px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none">
-        <option value="ALL">كل المواقع / All Sites</option>
-      </select>
-      <button class="btn btn-sm btn-ghost" id="btn-clear-filter" style="white-space:nowrap">مسح / Clear</button>
-    </div>
-    <div id="emp-count" style="font-size:12px;color:var(--txt2);margin-bottom:10px"></div>
-    <div id="emp-list"></div>
-  </div>
-
-  <!-- DASHBOARD TAB -->
-  <div class="tab-content content" data-tab="dashboard" style="display:none">
-    <div class="month-nav">
-      <button id="dash-prev">‹</button>
-      <span id="dash-month-lbl"></span>
-      <button id="dash-next">›</button>
-    </div>
-    <div style="margin-bottom:12px">
-      <select id="dash-site-filter" class="filter-select">
-        <option value="ALL">كل المواقع / All Sites</option>
-      </select>
-    </div>
-    <div class="export-row">
-      <button class="btn btn-sm btn-ghost" id="btn-csv">📥 CSV</button>
-      <button class="btn btn-sm btn-ghost" id="btn-wa">📲 واتساب</button>
-      <button class="btn btn-sm btn-ghost" id="btn-print">🖨️ طباعة</button>
-      <button class="btn btn-sm btn-ghost" id="btn-month-end">🔒 إغلاق الشهر</button>
-    </div>
-    <div id="dash-content"></div>
-  </div>
-
-  <!-- SITES TAB -->
-  <div class="tab-content content" data-tab="sites" style="display:none">
-    <!-- Sites -->
-    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">🏗 المواقع / Sites</div>
-    <div class="card" style="margin-bottom:10px">
-      <div class="field" style="margin-bottom:10px"><label>اسم الموقع / Site Name</label><input type="text" id="new-site-inp" placeholder="مثال: Site A"/></div>
-      <button class="btn btn-full btn-primary" id="btn-add-site">إضافة موقع / Add Site</button>
-    </div>
-    <div id="sites-list" style="margin-bottom:20px"></div>
-    <!-- Job Titles -->
-    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">💼 المسميات الوظيفية / Job Titles</div>
-    <div class="card" style="margin-bottom:10px">
-      <div class="field" style="margin-bottom:10px"><label>المسمى الوظيفي / Job Title</label><input type="text" id="new-job-inp" placeholder="مثال: مشرف / Supervisor"/></div>
-      <button class="btn btn-full btn-primary" id="btn-add-job">إضافة مسمى / Add Title</button>
-    </div>
-    <div id="jobs-list"></div>
-  </div>
-
-  <!-- USERS TAB -->
-  <div class="tab-content content" data-tab="users" style="display:none">
-    <div class="card" style="margin-bottom:14px">
-      <div class="field"><label>اسم المستخدم / Username</label><input type="text" id="nu-username" placeholder="username"/></div>
-      <div class="field"><label>كلمة المرور / Password</label><input type="password" id="nu-password" placeholder="password"/></div>
-      <div class="field"><label>الدور / Role</label>
-        <select id="nu-role">
-          <option value="">-- اختر --</option>
-          <option value="admin">مدير / Admin</option>
-          <option value="office">مكتب / Office</option>
-          <option value="accounts">محاسبة / Accounts</option>
-          <option value="site_head">مشرف موقع / Site Head</option>
-        </select>
-      </div>
-      <div class="field"><label>الموقع / Site (للمشرف فقط)</label><select id="nu-site"><option value="">ALL</option></select></div>
-      <button class="btn btn-full btn-primary" id="btn-add-user">إضافة مستخدم / Add User</button>
-    </div>
-    <div id="users-list"></div>
-  </div>
-</div>
-
-<!-- ═══ DETAIL ═══ -->
-<div id="screen-detail" class="screen">
-  <div class="topbar">
-    <button class="back-btn" id="btn-back">← رجوع / Back</button>
-    <div class="topbar-right">
-      <button class="icon-btn" id="theme-toggle2" onclick="applyTheme(S.theme==='dark'?'light':'dark')">☀️</button>
-      <button class="btn-logout" id="btn-logout2">خروج</button>
-    </div>
-  </div>
-  <div class="content" id="detail-content"></div>
-</div>
-
-<!-- ═══ ADD EMPLOYEE MODAL ═══ -->
-<div class="overlay" id="modal-add">
-  <div class="sheet">
-    <div class="sheet-title"><span>إضافة موظف / Add Employee</span><button class="sheet-close" data-close="modal-add">×</button></div>
-    <div class="field"><label>الاسم الكامل / Full Name <span style="color:var(--red)">*</span></label><input type="text" id="ae-name"/></div>
-    <div class="field"><label>الاسم المختصر / Short Name</label><input type="text" id="ae-shortname"/></div>
-    <div class="field"><label>رقم الإقامة / Iqama No <span style="color:var(--red)">*</span></label><input type="text" id="ae-iqama" style="font-family:'IBM Plex Mono',monospace"/></div>
-    <div class="field"><label>رقم الجواز / Passport No</label><input type="text" id="ae-passport" style="font-family:'IBM Plex Mono',monospace"/></div>
-    <div class="field"><label>الجوال / Phone</label><input type="tel" id="ae-phone"/></div>
-    <div class="field"><label>الموقع / Site <span style="color:var(--red)">*</span></label><select id="ae-site"></select></div>
-    <div class="field"><label>المسمى الوظيفي / Job Title</label><select id="ae-jobtitle"></select></div>
-    <div class="field"><label>الراتب / Salary (SAR) <span style="color:var(--red)">*</span></label><input type="number" id="ae-salary"/></div>
-    <div class="field"><label>انتهاء الإقامة / Iqama Expiry</label><input type="date" id="ae-iqama-expiry"/></div>
-    <button class="btn btn-full btn-primary" id="btn-save-emp">حفظ / Save</button>
-  </div>
-</div>
-
-<!-- ═══ EDIT EMPLOYEE MODAL ═══ -->
-<div class="overlay" id="modal-edit">
-  <div class="sheet">
-    <div class="sheet-title"><span>تعديل موظف / Edit</span><button class="sheet-close" data-close="modal-edit">×</button></div>
-    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">🪪 <span id="ee-iqama-lbl" style="font-family:'IBM Plex Mono',monospace;color:var(--acc)"></span></div>
-    <div class="field"><label>الاسم / Name</label><input type="text" id="ee-name"/></div>
-    <div class="field"><label>الاسم المختصر / Short Name</label><input type="text" id="ee-shortname"/></div>
-    <div class="field"><label>الجوال / Phone</label><input type="tel" id="ee-phone"/></div>
-    <div class="field"><label>الجواز / Passport</label><input type="text" id="ee-passport" style="font-family:'IBM Plex Mono',monospace"/></div>
-    <div class="field"><label>الموقع / Site</label><select id="ee-site"></select></div>
-    <div class="field"><label>المسمى الوظيفي / Job Title</label><select id="ee-jobtitle"></select></div>
-    <div class="field"><label>الراتب / Salary</label><input type="number" id="ee-salary"/></div>
-    <div class="field"><label>انتهاء الإقامة / Iqama Expiry</label><input type="date" id="ee-iqama-expiry"/></div>
-    <button class="btn btn-full btn-warn" id="btn-save-edit">حفظ التعديل / Save</button>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<!-- EDIT SITE MODAL -->
-<div class="overlay" id="modal-edit-site">
-  <div class="sheet">
-    <div class="sheet-title"><span>تعديل موقع / Edit Site</span><button class="sheet-close" data-close="modal-edit-site">×</button></div>
-    <input type="hidden" id="edit-site-id"/>
-    <div class="field"><label>اسم الموقع / Site Name</label><input type="text" id="edit-site-name"/></div>
-    <button class="btn btn-full btn-warn" id="btn-save-site-edit">حفظ / Save</button>
-  </div>
-</div>
-
-<!-- EDIT JOB TITLE MODAL -->
-<div class="overlay" id="modal-edit-job">
-  <div class="sheet">
-    <div class="sheet-title"><span>تعديل مسمى / Edit Job Title</span><button class="sheet-close" data-close="modal-edit-job">×</button></div>
-    <input type="hidden" id="edit-job-id"/>
-    <div class="field"><label>المسمى الوظيفي / Job Title</label><input type="text" id="edit-job-name"/></div>
-    <button class="btn btn-full btn-warn" id="btn-save-job-edit">حفظ / Save</button>
-  </div>
-</div>
-
-<!-- EDIT USER MODAL -->
-<div class="overlay" id="modal-edit-user">
-  <div class="sheet">
-    <div class="sheet-title"><span>تعديل مستخدم / Edit User</span><button class="sheet-close" data-close="modal-edit-user">×</button></div>
-    <input type="hidden" id="edit-user-id"/>
-    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">
-      👤 <span id="edit-user-name-lbl" style="color:var(--acc);font-weight:700"></span>
-    </div>
-    <div class="field"><label>كلمة المرور الجديدة / New Password</label><input type="password" id="edit-user-pass" placeholder="اتركه فارغاً للإبقاء على القديم"/></div>
-    <div class="field"><label>الدور / Role</label>
-      <select id="edit-user-role">
-        <option value="admin">مدير / Admin</option>
-        <option value="office">مكتب / Office</option>
-        <option value="accounts">محاسبة / Accounts</option>
-        <option value="site_head">مشرف موقع / Site Head</option>
-      </select>
-    </div>
-    <div class="field"><label>الموقع / Site</label><select id="edit-user-site"><option value="ALL">ALL</option></select></div>
-    <button class="btn btn-full btn-warn" id="btn-save-user-edit">حفظ / Save</button>
-  </div>
-</div>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<style>
-
-/* ══════════════════════════════════════════
-   CSS VARIABLES — DARK & LIGHT THEMES
-══════════════════════════════════════════ */
-:root,[data-theme="dark"]{
-  --bg:#0f1117;--sur:#1a1d27;--sur2:#22263a;--bdr:#2e3347;
-  --acc:#4f7fff;--grn:#38e8c0;--red:#ff5252;--orn:#ffb142;
-  --txt:#eef0f8;--txt2:#8b90a8;--shadow:0 4px 20px rgba(0,0,0,.4);
-}
-[data-theme="light"]{
-  --bg:#eef0f6;--sur:#ffffff;--sur2:#e2e5f0;--bdr:#c2c8de;
-  --acc:#2d5be3;--grn:#0e8f6a;--red:#d32f2f;--orn:#c97000;
-  --txt:#0d0f1a;--txt2:#3a4060;--shadow:0 4px 20px rgba(0,0,0,.12);
-}
-
-/* Light mode specific overrides for better readability */
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;overflow-x:hidden;transition:background .3s,color .3s}
-.screen{display:none;min-height:100vh;flex-direction:column}
-.screen.active{display:flex}
-
-/* TOPBAR */
-.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
-.topbar-left{display:flex;align-items:center;gap:10px}
-.topbar-logo{width:34px;height:34px;border-radius:8px;object-fit:cover}
-.topbar-name{font-size:15px;font-weight:700;line-height:1.2}
-.topbar-role{font-size:10px;color:var(--acc);font-weight:500}
-.topbar-right{display:flex;align-items:center;gap:7px}
-.icon-btn{background:none;border:1px solid var(--bdr);border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.btn-logout{background:none;border:1px solid var(--bdr);color:var(--txt2);padding:5px 11px;font-size:12px;border-radius:7px;font-family:'Tajawal',sans-serif;cursor:pointer}
-
-/* TABS */
-.tabs{display:flex;background:var(--sur);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:70px;padding:12px 4px;text-align:center;font-size:11px;font-family:'Tajawal',sans-serif;font-weight:500;color:var(--txt2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .2s}
-.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
-
-/* CONTENT */
-.content{flex:1;padding:16px;overflow-y:auto}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-appearance:none}
-.btn:active{transform:scale(0.97)}
-.btn-full{width:100%;padding:13px;font-size:15px}
-.btn-sm{padding:7px 13px;font-size:12px}
-.btn-primary{background:var(--acc);color:#fff}
-.btn-success{background:#1db96a;color:#fff}
-.btn-warn{background:var(--orn);color:#fff}
-.btn-ghost{background:var(--sur2);color:var(--txt);border:1px solid var(--bdr)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-
-/* FORMS */
-.field{margin-bottom:13px}
-.field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weight:500}
-.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;-webkit-appearance:none;transition:border-color .2s}
-.field input:focus,.field select:focus{border-color:var(--acc)}
-.field-hint{font-size:10px;color:var(--txt2);margin-top:4px}
-
-/* LOGIN */
-#screen-login{justify-content:center;align-items:center;padding:24px 20px;background:radial-gradient(ellipse at top,rgba(79,127,255,.15),transparent 60%)}
-.login-wrap{width:100%;max-width:380px}
-.login-logo{display:flex;align-items:center;gap:16px;background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow)}
-.login-logo img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0}
-.login-logo-text h1{font-size:17px;font-weight:800;line-height:1.3}
-.login-logo-text p{font-size:11px;color:var(--txt2);margin-top:2px}
-.login-card{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
-
-/* CARDS */
-.card{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;padding:14px;margin-bottom:10px}
-
-/* EMPLOYEE LIST */
-.search-box{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;margin-bottom:13px;-webkit-appearance:none}
-.emp-card{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:border-color .15s}
-.emp-card:active{border-color:var(--acc);background:var(--sur2)}
-.emp-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--grn));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:#fff}
-.emp-info{flex:1;min-width:0}
-.emp-name{font-size:14px;font-weight:700}
-.emp-iqama{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--acc);margin-top:2px}
-.emp-meta{font-size:11px;color:var(--txt2);margin-top:1px}
-.badge{padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
-.badge-red{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.3);color:var(--red)}
-.badge-grn{background:rgba(56,232,192,.1);border:1px solid rgba(56,232,192,.3);color:var(--grn)}
-.badge-dim{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt2)}
-
-/* DETAIL */
-.back-btn{background:none;border:none;color:var(--acc);font-size:13px;font-weight:500;cursor:pointer;padding:0;font-family:'Tajawal',sans-serif;display:flex;align-items:center;gap:5px}
-.detail-header{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--bdr)}
-.detail-name{font-size:20px;font-weight:800;margin-bottom:3px}
-.detail-iqama{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--acc);margin-bottom:3px}
-.detail-meta{font-size:12px;color:var(--txt2)}
-
-/* DUES */
-.dues-box{background:linear-gradient(135deg,rgba(79,127,255,.08),rgba(56,232,192,.05));border:1px solid var(--bdr);border-radius:13px;padding:16px;margin-bottom:16px}
-.dues-box h3{font-size:12px;color:var(--txt2);margin-bottom:12px;font-weight:600}
-.dues-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
-.dues-item .lbl{font-size:10px;color:var(--txt2);margin-bottom:3px;text-align:center}
-.dues-item .val{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;text-align:center}
-.dues-total{border-top:1px solid var(--bdr);padding-top:11px;text-align:center}
-.dues-total .lbl{font-size:12px;color:var(--txt2)}
-.dues-total .amount{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;margin-top:3px}
-
-/* SECTION */
-.section{margin-bottom:16px}
-.section h3{font-size:13px;color:var(--txt2);margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--bdr)}
-.info-row{background:rgba(79,127,255,.07);border:1px solid rgba(79,127,255,.2);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:13px;line-height:2}
-
-/* DASHBOARD */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
-.stat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:12px;text-align:center}
-.stat-val{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;margin-bottom:3px}
-.stat-lbl{font-size:10px;color:var(--txt2)}
-.site-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:13px;margin-bottom:9px}
-.dash-tbl{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
-.dash-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;background:var(--sur2);font-size:10px;color:var(--txt2);font-weight:600;border-bottom:1px solid var(--bdr)}
-.dash-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 12px;border-bottom:1px solid var(--bdr);align-items:start;cursor:pointer;transition:background .12s}
-.dash-row:last-child{border-bottom:none}
-.dash-row:active{background:var(--sur2)}
-.mono{font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;padding-top:3px}
-.month-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:9px}
-.month-nav button{background:none;border:none;color:var(--acc);font-size:22px;cursor:pointer;line-height:1;padding:0 5px}
-.month-nav span{font-size:14px;font-weight:700}
-.filter-select{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none}
-.export-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:13px}
-.alert-box{background:rgba(255,178,66,.1);border:1px solid rgba(255,178,66,.35);border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--orn);line-height:1.8}
-
-/* SITES & USERS */
-.site-item{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-
-/* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:200;align-items:flex-end}
-.overlay.open{display:flex}
-.sheet{background:var(--sur);border-radius:18px 18px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;animation:up .25s ease}
-@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.sheet-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-.sheet-close{background:var(--sur2);border:none;color:var(--txt2);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-
-/* TOAST */
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:10px 18px;font-size:13px;z-index:999;transition:transform .25s;white-space:nowrap;max-width:86vw;text-align:center;pointer-events:none;box-shadow:var(--shadow)}
-#toast.show{transform:translateX(-50%) translateY(0)}
-#toast.ok{border-color:var(--grn);color:var(--grn)}
-#toast.err{border-color:var(--red);color:var(--red)}
-
-/* LOADER */
-.loader{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--txt2);gap:9px;font-size:13px}
-.spin{width:17px;height:17px;border:2px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:32px 16px;color:var(--txt2);font-size:13px}
-
-[data-theme="light"] .emp-name,
-[data-theme="light"] .detail-name,
-[data-theme="light"] .topbar-name,
-[data-theme="light"] .stat-val,
-[data-theme="light"] .dues-total .amount,
-[data-theme="light"] .site-item span,
-[data-theme="light"] .dash-row div { color: var(--txt); }
-
-[data-theme="light"] .emp-iqama,
-[data-theme="light"] .detail-iqama { color: var(--acc); }
-
-[data-theme="light"] .emp-meta,
-[data-theme="light"] .detail-meta,
-[data-theme="light"] .emp-site,
-[data-theme="light"] .stat-lbl,
-[data-theme="light"] .dues-box h3,
-[data-theme="light"] .field label,
-[data-theme="light"] .section h3,
-[data-theme="light"] .topbar-role,
-[data-theme="light"] .tab { color: var(--txt2); font-weight:500; }
-
-[data-theme="light"] .tab.active { color: var(--acc); font-weight:700; }
-
-[data-theme="light"] .card,
-[data-theme="light"] .dues-box,
-[data-theme="light"] .emp-card,
-[data-theme="light"] .stat-card,
-[data-theme="light"] .site-card,
-[data-theme="light"] .dash-tbl,
-[data-theme="light"] .login-card,
-[data-theme="light"] .login-logo,
-[data-theme="light"] .sheet {
-  border-color: var(--bdr);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
-}
-
-[data-theme="light"] .field input,
-[data-theme="light"] .field select,
-[data-theme="light"] .search-box,
-[data-theme="light"] .filter-select {
-  background: #fff;
-  border-color: #b0b8d0;
-  color: var(--txt);
-  font-weight: 500;
-}
-
-[data-theme="light"] .topbar {
-  background: #fff;
-  border-bottom: 2px solid var(--bdr);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
-}
-
-[data-theme="light"] .tabs {
-  background: #fff;
-  border-bottom: 2px solid var(--bdr);
-}
-
-[data-theme="light"] .dues-box {
-  background: linear-gradient(135deg, rgba(45,91,227,.06), rgba(14,143,106,.04));
-}
-
-[data-theme="light"] .dues-item .lbl { color: #3a4060; font-weight:600; }
-[data-theme="light"] .dues-item .val { font-weight:700; }
-
-[data-theme="light"] .alert-box {
-  background: rgba(201,112,0,.1);
-  border-color: rgba(201,112,0,.4);
-  color: #8a4d00;
-  font-weight: 600;
-}
-
-[data-theme="light"] .dash-hdr {
-  background: #e2e5f0;
-  color: #3a4060;
-  font-weight: 700;
-}
-
-[data-theme="light"] .dash-row { border-bottom-color: #d0d5e8; }
-[data-theme="light"] .dash-row:active { background: #e8ebf5; }
-
-[data-theme="light"] .month-nav { background:#fff; border-color:var(--bdr); }
-[data-theme="light"] .month-nav span { color: var(--txt); font-weight:700; }
-
-[data-theme="light"] .btn-ghost {
-  background: #e8ebf5;
-  border-color: #b8bdd8;
-  color: #1a1d2e;
-  font-weight: 600;
-}
-
-[data-theme="light"] .btn-logout {
-  border-color: #b8bdd8;
-  color: #3a4060;
-  font-weight: 600;
-}
-
-[data-theme="light"] .badge-dim {
-  background: #e2e5f0;
-  border-color: #c2c8de;
-  color: #3a4060;
-  font-weight: 700;
-}
-
-[data-theme="light"] .badge-red { font-weight:700; }
-[data-theme="light"] .badge-grn { font-weight:700; }
-
-[data-theme="light"] .info-row {
-  background: rgba(45,91,227,.06);
-  border-color: rgba(45,91,227,.25);
-  color: var(--txt);
-}
-
-[data-theme="light"] #toast {
-  background: #fff;
-  border-color: var(--bdr);
-  color: var(--txt);
-  box-shadow: 0 4px 16px rgba(0,0,0,.15);
-}
-
-[data-theme="light"] .section h3 {
-  border-bottom-color: var(--bdr);
-  font-weight: 700;
-}
-
-[data-theme="light"] .login-logo-text h1 { color: var(--txt); font-weight:800; }
-[data-theme="light"] .login-logo-text p  { color: var(--txt2); font-weight:500; }
-
-[data-theme="light"] .mono { font-weight:700; }
-
-[data-theme="light"] .emp-av { box-shadow: 0 2px 8px rgba(45,91,227,.2); }
-
-</style>
 </body>
 </html>
