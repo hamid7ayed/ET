@@ -1488,20 +1488,24 @@ async function loadUsersTab() {
   loading('users-list');
   const users = await fsAll('users');
   if (!users.length) { document.getElementById('users-list').innerHTML='<div class="empty">لا يوجد مستخدمون</div>'; return; }
+  // Store users map for edit lookup
+  window._usersMap = {};
+  users.forEach(u => { window._usersMap[u.id] = u; });
+
   document.getElementById('users-list').innerHTML = users.map(u=>
-    '<div class="site-item"><div><div style="font-size:14px;font-weight:700">👤 '+u.username+'</div>'
+    '<div class="site-item"><div><div style="font-size:14px;font-weight:700">ه  '+u.username+'</div>'
     +'<div style="font-size:11px;color:var(--txt2)">'+(ROLES[u.role]||u.role)+(u.site&&u.site!=='ALL'?' · '+u.site:'')+'</div></div>'
     +'<div style="display:flex;gap:6px">'
-    +'<button class="btn btn-sm btn-ghost" data-edit-user=''+JSON.stringify({id:u.id,username:u.username,role:u.role,site:u.site||'ALL'})+''>تعديل</button>'
+    +'<button class="btn btn-sm btn-ghost" data-edit-uid="'+u.id+'">تعديل</button>'
     +'<button class="btn btn-sm btn-ghost" data-del-user="'+u.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
     +'</div></div>'
   ).join('');
   document.querySelectorAll('[data-del-user]').forEach(btn=>{
     btn.addEventListener('click',async()=>{ if(!confirm('حذف المستخدم؟')) return; await fsDelete('users',btn.dataset.delUser); toast('تم الحذف ✓','ok'); loadUsersTab(); });
   });
-  document.querySelectorAll('[data-edit-user]').forEach(btn=>{
+  document.querySelectorAll('[data-edit-uid]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const u = JSON.parse(btn.dataset.editUser);
+      const u = window._usersMap[btn.dataset.editUid] || {};
       document.getElementById('edit-user-id').value   = u.id;
       document.getElementById('edit-user-name-lbl').textContent = u.username;
       document.getElementById('edit-user-pass').value = '';
