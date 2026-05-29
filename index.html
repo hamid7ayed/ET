@@ -756,6 +756,15 @@ async function loadEmployees() {
     S.cache.empDues[eid] = calcDuesFromTx(empTx, cf?.amount||0);
   });
 
+  // Populate site filter dropdown
+  const sf = document.getElementById('site-filter');
+  if (sf) {
+    const cur = sf.value;
+    const sites = [...new Set(S.employees.map(e=>e.site))].filter(Boolean).sort();
+    sf.innerHTML = '<option value="ALL">كل المواقع / All Sites</option>'
+      + sites.map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+s+'</option>').join('');
+  }
+
   renderEmpList(emps);
 }
 
@@ -862,7 +871,7 @@ function renderDetail() {
   const canTx  = ['admin','office','accounts','site_head'].includes(role);
   const canExp = ['admin','office','accounts'].includes(role);
   const canEdt = ['admin','office'].includes(role);
-  const salary = parseFloat(emp.salary)||0;
+  const salary = parseFloat(emp.salary||emp.Salary||0)||0;
   const net    = d.totalDues>0 ? Math.max(0,salary-d.totalDues) : salary;
   const dColor = d.totalDues>0?'var(--red)':d.totalDues<0?'var(--orn)':'var(--grn)';
 
@@ -1103,32 +1112,66 @@ async function saveEdit() {
 // PAYSLIP
 // ===
 function generatePayslip() {
-  const emp=S.currentEmp, d=S.currentDues;
-  const salary=parseFloat(emp.salary)||0;
-  const net=d.totalDues>0?Math.max(0,salary-d.totalDues):salary;
-  const w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>بيان راتب</title>'
-    +'\x3Cstyle>body{font-family:Arial,sans-serif;padding:30px;font-size:13px;max-width:500px;margin:0 auto}'
-    +'h2{font-size:18px;text-align:center;margin-bottom:4px}.sub{text-align:center;color:#666;margin-bottom:20px}'
-    +'.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}'
-    +'.total{font-size:16px;font-weight:bold;padding:12px 0;border-top:2px solid #333}'
-    +'.red{color:#e53935}.grn{color:#43a047}'
-    +'@media print{body{padding:10px}}\x3C/style>\x3C/head><body>'
-    +'<h2>بيان راتب / Payslip</h2>'
-    +'<div class="sub">'+MONTHS_SHORT[d.month]+' '+d.year+'</div>'
-    +'<div class="row"><span>الاسم / Name</span><span>'+emp.name+'</span></div>'
-    +'<div class="row"><span>رقم الإقامة / Iqama</span><span style="font-family:monospace">'+emp.iqamaNo+'</span></div>'
-    +'<div class="row"><span>الموقع / Site</span><span>'+emp.site+'</span></div>'
-    +'<div class="row"><span>الراتب الأساسي / Basic Salary</span><span>'+sar(salary)+'</span></div>'
-    +(d.carryFwd?'<div class="row"><span>ترحيل / Carry Forward</span><span class="red">'+sar(d.carryFwd)+'</span></div>':'')
-    +(d.advances?'<div class="row"><span>سلف / Advances</span><span class="red">'+sar(d.advances)+'</span></div>':'')
-    +(d.expenses?'<div class="row"><span>مصاريف / Expenses</span><span class="red">'+sar(d.expenses)+'</span></div>':'')
-    +(d.loans?'<div class="row"><span>قروض / Loans</span><span class="red">'+sar(d.loans)+'</span></div>':'')
-    +(d.deductions?'<div class="row"><span>خصومات / Deductions</span><span class="red">'+sar(d.deductions)+'</span></div>':'')
-    +(d.bonuses?'<div class="row"><span>مكافآت / Bonuses</span><span class="grn">'+sar(d.bonuses)+'</span></div>':'')
-    +'<div class="row total"><span>صافي الراتب / Net Payable</span><span class="grn">'+sar(net)+'</span></div>'
-    +'\x3Cscript>window.onload=function(){window.print();}\x3C/script></body></html>');
-  w.document.close();
+  const emp = S.currentEmp;
+  const d   = S.currentDues;
+  const salary = parseFloat(emp.salary||emp.Salary||0)||0;
+  const net    = d.totalDues > 0 ? Math.max(0, salary - d.totalDues) : salary;
+
+  const advList   = S.currentTx.filter(t=>t.type==='advance');
+  const expList   = S.currentTx.filter(t=>t.type==='expense');
+  const loanList  = S.currentTx.filter(t=>t.type==='loan');
+  const dedList   = S.currentTx.filter(t=>t.type==='deduction');
+  const bonusList = S.currentTx.filter(t=>t.type==='bonus');
+
+  const txRow = (label, amt, note, cls) =>
+    '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:13px">'
+    +'<span style="color:var(--txt2)">'+label+(note?' — <em>'+note+'</em>':'')+'</span>'
+    +'<span style="font-weight:700;color:'+cls+'">'+sar(amt)+'</span></div>';
+
+  const sumRow = (label, amt, cls) =>
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)">'
+    +'<span style="font-weight:600">'+label+'</span>'
+    +'<span style="font-weight:700;color:'+cls+'">'+sar(amt)+'</span></div>';
+
+  let html = '<div style="text-align:center;margin-bottom:16px">'
+    +'<div style="font-size:18px;font-weight:800">'+emp.name+'</div>'
+    +'<div style="font-size:12px;color:var(--txt2);margin-top:4px">'+emp.site+' · '+MONTHS_SHORT[d.month]+' '+d.year+'</div>'
+    +'<div style="font-size:12px;color:var(--acc)">'+emp.iqamaNo+'</div></div>';
+
+  html += '<div class="card">';
+  html += sumRow('الراتب الأساسي / Basic Salary', salary, 'var(--txt)');
+  if (d.carryFwd) html += sumRow('ترحيل / Carry Forward', d.carryFwd, 'var(--orn)');
+
+  if (advList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">سلف / Advances ('+advList.length+')</div>';
+    advList.forEach((t,i)=>{ html += txRow('سلفة #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+    if (advList.length>1) html += sumRow('إجمالي السلف', d.advances, 'var(--red)');
+  }
+  if (expList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">مصاريف / Expenses ('+expList.length+')</div>';
+    expList.forEach((t,i)=>{ html += txRow('مصروف #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+    if (expList.length>1) html += sumRow('إجمالي المصاريف', d.expenses, 'var(--red)');
+  }
+  if (loanList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">قروض / Loans ('+loanList.length+')</div>';
+    loanList.forEach((t,i)=>{ html += txRow('قرض #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+  }
+  if (dedList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">خصومات / Deductions ('+dedList.length+')</div>';
+    dedList.forEach((t,i)=>{ html += txRow('خصم #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+  }
+  if (bonusList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">مكافآت / Bonuses ('+bonusList.length+')</div>';
+    bonusList.forEach((t,i)=>{ html += txRow('مكافأة #'+(i+1), t.amount, t.notes||'', 'var(--grn)'); });
+  }
+  html += '</div>';
+
+  html += '<div style="background:rgba(56,232,192,.1);border:1px solid var(--grn);border-radius:12px;padding:16px;text-align:center;margin-top:14px">'
+    +'<div style="font-size:13px;color:var(--txt2)">صافي الراتب / Net Payable</div>'
+    +'<div style="font-size:28px;font-weight:800;color:var(--grn);margin-top:6px">'+sar(net)+'</div></div>';
+
+  document.getElementById('payslip-content').innerHTML = html;
+  openModal('modal-payslip');
 }
 
 // ===
@@ -1174,7 +1217,7 @@ async function loadDashboard() {
     const pempTx = ptxAll.filter(t=>t.iqamaNo===emp.iqamaNo);
     const pcf    = pcfAll.find(c=>c.iqamaNo===emp.iqamaNo);
     const prevDues = calcDuesFromTx(pempTx, pcf?.amount||0);
-    const salary = parseFloat(emp.salary)||0;
+    const salary = parseFloat(emp.salary||emp.Salary||0)||0;
     return {
       ...emp, ...dues,
       prevDues: prevDues.totalDues,
@@ -1643,5 +1686,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 </script>
+<!-- PAYSLIP MODAL -->
+<div class="overlay" id="modal-payslip">
+  <div class="sheet" style="max-height:95vh">
+    <div class="sheet-title">
+      <span>بيان راتب / Payslip</span>
+      <button class="sheet-close" data-close="modal-payslip">×</button>
+    </div>
+    <div id="payslip-content"></div>
+    <button class="btn btn-full btn-ghost" style="margin-top:14px" onclick="window.print()">🖨️ طباعة / Print</button>
+  </div>
+</div>
+
 </body>
 </html>
