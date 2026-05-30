@@ -1,124 +1,1702 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1a1a2e">
-  <title>پينک — در حال انتقال...</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="سلف">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<title>متتبع السلف | Employee Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
 
-  <!-- Auto redirect after 3 seconds -->
-  <meta http-equiv="refresh" content="3;url=https://penak-7f61b.web.app">
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #0f0f1a;
-      color: #eaeaea;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .card {
-      background: #1a1a2e;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 40px 32px;
-      max-width: 380px;
-      width: 100%;
-      text-align: center;
-    }
-    .icon { font-size: 64px; margin-bottom: 16px; display: block; }
-    h1 { font-size: 28px; font-weight: 900; color: #eaeaea; margin-bottom: 8px; }
-    .subtitle { color: #8892a4; font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
-    .new-link {
-      display: block;
-      background: linear-gradient(135deg, #e94560, #c0392b);
-      color: white;
-      text-decoration: none;
-      border-radius: 14px;
-      padding: 16px 24px;
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      transition: opacity .2s;
-    }
-    .new-link:active { opacity: 0.85; }
-    .countdown {
-      font-size: 13px;
-      color: #8892a4;
-      margin-top: 20px;
-    }
-    .countdown span {
-      color: #f5a623;
-      font-weight: 700;
-      font-size: 16px;
-    }
-    .progress {
-      background: rgba(255,255,255,0.08);
-      border-radius: 6px;
-      height: 4px;
-      margin-top: 16px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      background: linear-gradient(90deg, #e94560, #f5a623);
-      height: 100%;
-      width: 0%;
-      border-radius: 6px;
-      animation: fill 3s linear forwards;
-    }
-    @keyframes fill {
-      from { width: 0%; }
-      to   { width: 100%; }
-    }
-  </style>
+
+
+
+/* ══════════════════════════════════════════
+   CSS VARIABLES — DARK & LIGHT THEMES
+══════════════════════════════════════════ */
+:root,[data-theme="dark"]{
+  --bg:#0f1117;--sur:#1a1d27;--sur2:#22263a;--bdr:#2e3347;
+  --acc:#4f7fff;--grn:#38e8c0;--red:#ff5252;--orn:#ffb142;
+  --txt:#eef0f8;--txt2:#8b90a8;--shadow:0 4px 20px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:#eef0f6;--sur:#ffffff;--sur2:#e2e5f0;--bdr:#c2c8de;
+  --acc:#2d5be3;--grn:#0e8f6a;--red:#d32f2f;--orn:#c97000;
+  --txt:#0d0f1a;--txt2:#3a4060;--shadow:0 4px 20px rgba(0,0,0,.12);
+}
+
+/* Light mode specific overrides for better readability */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;overflow-x:hidden;transition:background .3s,color .3s}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* TOPBAR */
+.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{width:34px;height:34px;border-radius:8px;object-fit:cover}
+.topbar-name{font-size:15px;font-weight:700;line-height:1.2}
+.topbar-role{font-size:10px;color:var(--acc);font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:7px}
+.icon-btn{background:none;border:1px solid var(--bdr);border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-logout{background:none;border:1px solid var(--bdr);color:var(--txt2);padding:5px 11px;font-size:12px;border-radius:7px;font-family:'Tajawal',sans-serif;cursor:pointer}
+
+/* TABS */
+.tabs{display:flex;background:var(--sur);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:70px;padding:12px 4px;text-align:center;font-size:11px;font-family:'Tajawal',sans-serif;font-weight:500;color:var(--txt2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .2s}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* CONTENT */
+.content{flex:1;padding:16px;overflow-y:auto}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-appearance:none}
+.btn:active{transform:scale(0.97)}
+.btn-full{width:100%;padding:13px;font-size:15px}
+.btn-sm{padding:7px 13px;font-size:12px}
+.btn-primary{background:var(--acc);color:#fff}
+.btn-success{background:#1db96a;color:#fff}
+.btn-warn{background:var(--orn);color:#fff}
+.btn-ghost{background:var(--sur2);color:var(--txt);border:1px solid var(--bdr)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* FORMS */
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weight:500}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;-webkit-appearance:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--acc)}
+.field-hint{font-size:10px;color:var(--txt2);margin-top:4px}
+
+/* LOGIN */
+#screen-login{justify-content:center;align-items:center;padding:24px 20px;background:radial-gradient(ellipse at top,rgba(79,127,255,.15),transparent 60%)}
+.login-wrap{width:100%;max-width:380px}
+.login-logo{display:flex;align-items:center;gap:16px;background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow)}
+.login-logo img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0}
+.login-logo-text h1{font-size:17px;font-weight:800;line-height:1.3}
+.login-logo-text p{font-size:11px;color:var(--txt2);margin-top:2px}
+.login-card{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+
+/* CARDS */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;padding:14px;margin-bottom:10px}
+
+/* EMPLOYEE LIST */
+.search-box{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:11px 13px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;margin-bottom:13px;-webkit-appearance:none}
+.emp-card{background:var(--sur);border:1px solid var(--bdr);border-radius:13px;padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:border-color .15s}
+.emp-card:active{border-color:var(--acc);background:var(--sur2)}
+.emp-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--grn));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:#fff}
+.emp-info{flex:1;min-width:0}
+.emp-name{font-size:14px;font-weight:700}
+.emp-iqama{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--acc);margin-top:2px}
+.emp-meta{font-size:11px;color:var(--txt2);margin-top:1px}
+.badge{padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.badge-red{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.3);color:var(--red)}
+.badge-grn{background:rgba(56,232,192,.1);border:1px solid rgba(56,232,192,.3);color:var(--grn)}
+.badge-dim{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt2)}
+
+/* DETAIL */
+.back-btn{background:none;border:none;color:var(--acc);font-size:13px;font-weight:500;cursor:pointer;padding:0;font-family:'Tajawal',sans-serif;display:flex;align-items:center;gap:5px}
+.detail-header{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--bdr)}
+.detail-name{font-size:20px;font-weight:800;margin-bottom:3px}
+.detail-iqama{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--acc);margin-bottom:3px}
+.detail-meta{font-size:12px;color:var(--txt2)}
+
+/* DUES */
+.dues-box{background:linear-gradient(135deg,rgba(79,127,255,.08),rgba(56,232,192,.05));border:1px solid var(--bdr);border-radius:13px;padding:16px;margin-bottom:16px}
+.dues-box h3{font-size:12px;color:var(--txt2);margin-bottom:12px;font-weight:600}
+.dues-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.dues-item .lbl{font-size:10px;color:var(--txt2);margin-bottom:3px;text-align:center}
+.dues-item .val{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;text-align:center}
+.dues-total{border-top:1px solid var(--bdr);padding-top:11px;text-align:center}
+.dues-total .lbl{font-size:12px;color:var(--txt2)}
+.dues-total .amount{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;margin-top:3px}
+
+/* SECTION */
+.section{margin-bottom:16px}
+.section h3{font-size:13px;color:var(--txt2);margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--bdr)}
+.info-row{background:rgba(79,127,255,.07);border:1px solid rgba(79,127,255,.2);border-radius:8px;padding:11px 13px;margin-bottom:12px;font-size:13px;line-height:2}
+
+/* DASHBOARD */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.stat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:12px;text-align:center}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;margin-bottom:3px}
+.stat-lbl{font-size:10px;color:var(--txt2)}
+.site-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:13px;margin-bottom:9px}
+.dash-tbl{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
+.dash-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;background:var(--sur2);font-size:10px;color:var(--txt2);font-weight:600;border-bottom:1px solid var(--bdr)}
+.dash-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 12px;border-bottom:1px solid var(--bdr);align-items:start;cursor:pointer;transition:background .12s}
+.dash-row:last-child{border-bottom:none}
+.dash-row:active{background:var(--sur2)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;padding-top:3px}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:9px}
+.month-nav button{background:none;border:none;color:var(--acc);font-size:22px;cursor:pointer;line-height:1;padding:0 5px}
+.month-nav span{font-size:14px;font-weight:700}
+.filter-select{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none}
+.export-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:13px}
+.alert-box{background:rgba(255,178,66,.1);border:1px solid rgba(255,178,66,.35);border-radius:9px;padding:10px 13px;margin-bottom:12px;font-size:12px;color:var(--orn);line-height:1.8}
+
+/* SITES & USERS */
+.site-item{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:200;align-items:flex-end}
+.overlay.open{display:flex}
+.sheet{background:var(--sur);border-radius:18px 18px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;animation:up .25s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.sheet-close{background:var(--sur2);border:none;color:var(--txt2);width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:10px 18px;font-size:13px;z-index:999;transition:transform .25s;white-space:nowrap;max-width:86vw;text-align:center;pointer-events:none;box-shadow:var(--shadow)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--grn);color:var(--grn)}
+#toast.err{border-color:var(--red);color:var(--red)}
+
+/* LOADER */
+.loader{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--txt2);gap:9px;font-size:13px}
+.spin{width:17px;height:17px;border:2px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:32px 16px;color:var(--txt2);font-size:13px}
+
+[data-theme="light"] .emp-name,
+[data-theme="light"] .detail-name,
+[data-theme="light"] .topbar-name,
+[data-theme="light"] .stat-val,
+[data-theme="light"] .dues-total .amount,
+[data-theme="light"] .site-item span,
+[data-theme="light"] .dash-row div { color: var(--txt); }
+
+[data-theme="light"] .emp-iqama,
+[data-theme="light"] .detail-iqama { color: var(--acc); }
+
+[data-theme="light"] .emp-meta,
+[data-theme="light"] .detail-meta,
+[data-theme="light"] .emp-site,
+[data-theme="light"] .stat-lbl,
+[data-theme="light"] .dues-box h3,
+[data-theme="light"] .field label,
+[data-theme="light"] .section h3,
+[data-theme="light"] .topbar-role,
+[data-theme="light"] .tab { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .tab.active { color: var(--acc); font-weight:700; }
+
+[data-theme="light"] .card,
+[data-theme="light"] .dues-box,
+[data-theme="light"] .emp-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .site-card,
+[data-theme="light"] .dash-tbl,
+[data-theme="light"] .login-card,
+[data-theme="light"] .login-logo,
+[data-theme="light"] .sheet {
+  border-color: var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .field input,
+[data-theme="light"] .field select,
+[data-theme="light"] .search-box,
+[data-theme="light"] .filter-select {
+  background: #fff;
+  border-color: #b0b8d0;
+  color: var(--txt);
+  font-weight: 500;
+}
+
+[data-theme="light"] .topbar {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .tabs {
+  background: #fff;
+  border-bottom: 2px solid var(--bdr);
+}
+
+[data-theme="light"] .dues-box {
+  background: linear-gradient(135deg, rgba(45,91,227,.06), rgba(14,143,106,.04));
+}
+
+[data-theme="light"] .dues-item .lbl { color: #3a4060; font-weight:600; }
+[data-theme="light"] .dues-item .val { font-weight:700; }
+
+[data-theme="light"] .alert-box {
+  background: rgba(201,112,0,.1);
+  border-color: rgba(201,112,0,.4);
+  color: #8a4d00;
+  font-weight: 600;
+}
+
+[data-theme="light"] .dash-hdr {
+  background: #e2e5f0;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .dash-row { border-bottom-color: #d0d5e8; }
+[data-theme="light"] .dash-row:active { background: #e8ebf5; }
+
+[data-theme="light"] .month-nav { background:#fff; border-color:var(--bdr); }
+[data-theme="light"] .month-nav span { color: var(--txt); font-weight:700; }
+
+[data-theme="light"] .btn-ghost {
+  background: #e8ebf5;
+  border-color: #b8bdd8;
+  color: #1a1d2e;
+  font-weight: 600;
+}
+
+[data-theme="light"] .btn-logout {
+  border-color: #b8bdd8;
+  color: #3a4060;
+  font-weight: 600;
+}
+
+[data-theme="light"] .badge-dim {
+  background: #e2e5f0;
+  border-color: #c2c8de;
+  color: #3a4060;
+  font-weight: 700;
+}
+
+[data-theme="light"] .badge-red { font-weight:700; }
+[data-theme="light"] .badge-grn { font-weight:700; }
+
+[data-theme="light"] .info-row {
+  background: rgba(45,91,227,.06);
+  border-color: rgba(45,91,227,.25);
+  color: var(--txt);
+}
+
+[data-theme="light"] #toast {
+  background: #fff;
+  border-color: var(--bdr);
+  color: var(--txt);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+[data-theme="light"] .section h3 {
+  border-bottom-color: var(--bdr);
+  font-weight: 700;
+}
+
+[data-theme="light"] .login-logo-text h1 { color: var(--txt); font-weight:800; }
+[data-theme="light"] .login-logo-text p  { color: var(--txt2); font-weight:500; }
+
+[data-theme="light"] .mono { font-weight:700; }
+
+[data-theme="light"] .emp-av { box-shadow: 0 2px 8px rgba(45,91,227,.2); }
+
+
+
+
+
+</style>
 </head>
 <body>
-  <div class="card">
-    <span class="icon">🃏</span>
-    <h1>پينک</h1>
-    <p class="subtitle">
-      اپلیکیشن پينک به آدرس جدید منتقل شده است.<br>
-      <br>
-      The Penak app has moved to a new address.
-    </p>
-
-    <a href="https://penak-7f61b.web.app" class="new-link">
-      🚀 رفتن به پينک جدید<br>
-      <span style="font-size:12px; opacity:.8;">penak-7f61b.web.app</span>
-    </a>
-
-    <div class="countdown">
-      انتقال خودکار در <span id="sec">3</span> ثانیه...<br>
-      Auto-redirecting in <span id="sec2">3</span> seconds...
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <img src="logo.png" alt="Logo" onerror="this.style.display='none'"/>
+      <div class="login-logo-text">
+        <h1>متتبع السلف والرواتب</h1>
+        <p>Employee Advance &amp; Salary Tracker</p>
+      </div>
     </div>
-
-    <div class="progress">
-      <div class="progress-bar"></div>
+    <div class="login-card">
+      <div class="field"><label>اسم المستخدم / Username</label><input type="text" id="inp-user" placeholder="username" autocomplete="username"/></div>
+      <div class="field"><label>كلمة المرور / Password</label><input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="btn btn-full btn-primary" id="login-btn">دخول / Login</button>
     </div>
   </div>
+</div>
 
-  <script>
-    const NEW_URL = 'https://penak-7f61b.web.app';
-    let count = 3;
+<!-- ═══ MAIN ═══ -->
+<div id="screen-main" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="logo.png" alt="" class="topbar-logo" onerror="this.style.display='none'"/>
+      <div>
+        <div class="topbar-name" id="topbar-name"></div>
+        <div class="topbar-role" id="topbar-role"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-sm btn-ghost" id="btn-add-emp" style="display:none">+ موظف</button>
+      <button class="icon-btn" id="theme-toggle">☀️</button>
+      <button class="btn-logout" id="btn-logout">خروج</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="list">الموظفون</button>
+    <button class="tab" data-tab="dashboard">لوحة التحكم</button>
+    <button class="tab" data-tab="sites">المواقع</button>
+    <button class="tab" data-tab="users">المستخدمون</button>
+  </div>
 
-    const timer = setInterval(() => {
-      count--;
-      document.getElementById('sec').textContent  = count;
-      document.getElementById('sec2').textContent = count;
-      if (count <= 0) {
-        clearInterval(timer);
-        window.location.href = NEW_URL;
-      }
-    }, 1000);
+  <!-- LIST TAB -->
+  <div class="tab-content content" data-tab="list">
+    <input class="search-box" id="search-box" type="text" placeholder="🔍 بحث / Search..."/>
+    <div style="display:flex;gap:8px;margin-bottom:13px">
+      <select id="site-filter" style="flex:1;background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:10px 12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:13px;outline:none">
+        <option value="ALL">كل المواقع / All Sites</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" id="btn-clear-filter" style="white-space:nowrap">مسح / Clear</button>
+    </div>
+    <div id="emp-count" style="font-size:12px;color:var(--txt2);margin-bottom:10px"></div>
+    <div id="emp-list"></div>
+  </div>
 
-    // If PWA — redirect immediately after short delay
-    if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
-      setTimeout(() => { window.location.href = NEW_URL; }, 500);
+  <!-- DASHBOARD TAB -->
+  <div class="tab-content content" data-tab="dashboard" style="display:none">
+    <div class="month-nav">
+      <button id="dash-prev">‹</button>
+      <span id="dash-month-lbl"></span>
+      <button id="dash-next">›</button>
+    </div>
+    <div style="margin-bottom:12px">
+      <select id="dash-site-filter" class="filter-select">
+        <option value="ALL">كل المواقع / All Sites</option>
+      </select>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-sm btn-ghost" id="btn-csv">📥 CSV</button>
+      <button class="btn btn-sm btn-ghost" id="btn-wa">📲 واتساب</button>
+      <button class="btn btn-sm btn-ghost" id="btn-print">🖨️ طباعة</button>
+      <button class="btn btn-sm btn-ghost" id="btn-month-end">🔒 إغلاق الشهر</button>
+    </div>
+    <div id="dash-content"></div>
+  </div>
+
+  <!-- SITES TAB -->
+  <div class="tab-content content" data-tab="sites" style="display:none">
+    <!-- Sites -->
+    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">🏗 المواقع / Sites</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:10px"><label>اسم الموقع / Site Name</label><input type="text" id="new-site-inp" placeholder="مثال: Site A"/></div>
+      <button class="btn btn-full btn-primary" id="btn-add-site">إضافة موقع / Add Site</button>
+    </div>
+    <div id="sites-list" style="margin-bottom:20px"></div>
+    <!-- Job Titles -->
+    <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">💼 المسميات الوظيفية / Job Titles</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="field" style="margin-bottom:10px"><label>المسمى الوظيفي / Job Title</label><input type="text" id="new-job-inp" placeholder="مثال: مشرف / Supervisor"/></div>
+      <button class="btn btn-full btn-primary" id="btn-add-job">إضافة مسمى / Add Title</button>
+    </div>
+    <div id="jobs-list"></div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div class="tab-content content" data-tab="users" style="display:none">
+    <div class="card" style="margin-bottom:14px">
+      <div class="field"><label>اسم المستخدم / Username</label><input type="text" id="nu-username" placeholder="username"/></div>
+      <div class="field"><label>كلمة المرور / Password</label><input type="password" id="nu-password" placeholder="password"/></div>
+      <div class="field"><label>الدور / Role</label>
+        <select id="nu-role">
+          <option value="">-- اختر --</option>
+          <option value="admin">مدير / Admin</option>
+          <option value="office">مكتب / Office</option>
+          <option value="accounts">محاسبة / Accounts</option>
+          <option value="site_head">مشرف موقع / Site Head</option>
+        </select>
+      </div>
+      <div class="field"><label>الموقع / Site (للمشرف فقط)</label><select id="nu-site"><option value="">ALL</option></select></div>
+      <button class="btn btn-full btn-primary" id="btn-add-user">إضافة مستخدم / Add User</button>
+    </div>
+    <div id="users-list"></div>
+  </div>
+</div>
+
+<!-- ═══ DETAIL ═══ -->
+<div id="screen-detail" class="screen">
+  <div class="topbar">
+    <button class="back-btn" id="btn-back">← رجوع / Back</button>
+    <div class="topbar-right">
+      <button class="icon-btn" id="theme-toggle2" onclick="applyTheme(S.theme==='dark'?'light':'dark')">☀️</button>
+      <button class="btn-logout" id="btn-logout2">خروج</button>
+    </div>
+  </div>
+  <div class="content" id="detail-content"></div>
+</div>
+
+<!-- ═══ ADD EMPLOYEE MODAL ═══ -->
+<div class="overlay" id="modal-add">
+  <div class="sheet">
+    <div class="sheet-title"><span>إضافة موظف / Add Employee</span><button class="sheet-close" data-close="modal-add">×</button></div>
+    <div class="field"><label>الاسم الكامل / Full Name <span style="color:var(--red)">*</span></label><input type="text" id="ae-name"/></div>
+    <div class="field"><label>الاسم المختصر / Short Name</label><input type="text" id="ae-shortname"/></div>
+    <div class="field"><label>رقم الإقامة / Iqama No <span style="color:var(--red)">*</span></label><input type="text" id="ae-iqama" style="font-family:'IBM Plex Mono',monospace"/></div>
+    <div class="field"><label>رقم الجواز / Passport No</label><input type="text" id="ae-passport" style="font-family:'IBM Plex Mono',monospace"/></div>
+    <div class="field"><label>الجوال / Phone</label><input type="tel" id="ae-phone"/></div>
+    <div class="field"><label>الموقع / Site <span style="color:var(--red)">*</span></label><select id="ae-site"></select></div>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><select id="ae-jobtitle"></select></div>
+    <div class="field"><label>الراتب / Salary (SAR) <span style="color:var(--red)">*</span></label><input type="number" id="ae-salary"/></div>
+    <div class="field"><label>انتهاء الإقامة / Iqama Expiry</label><input type="date" id="ae-iqama-expiry"/></div>
+    <button class="btn btn-full btn-primary" id="btn-save-emp">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- ═══ EDIT EMPLOYEE MODAL ═══ -->
+<div class="overlay" id="modal-edit">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل موظف / Edit</span><button class="sheet-close" data-close="modal-edit">×</button></div>
+    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">🪪 <span id="ee-iqama-lbl" style="font-family:'IBM Plex Mono',monospace;color:var(--acc)"></span></div>
+    <div class="field"><label>الاسم / Name</label><input type="text" id="ee-name"/></div>
+    <div class="field"><label>الاسم المختصر / Short Name</label><input type="text" id="ee-shortname"/></div>
+    <div class="field"><label>الجوال / Phone</label><input type="tel" id="ee-phone"/></div>
+    <div class="field"><label>الجواز / Passport</label><input type="text" id="ee-passport" style="font-family:'IBM Plex Mono',monospace"/></div>
+    <div class="field"><label>الموقع / Site</label><select id="ee-site"></select></div>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><select id="ee-jobtitle"></select></div>
+    <div class="field"><label>الراتب / Salary</label><input type="number" id="ee-salary"/></div>
+    <div class="field"><label>انتهاء الإقامة / Iqama Expiry</label><input type="date" id="ee-iqama-expiry"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-edit">حفظ التعديل / Save</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- EDIT SITE MODAL -->
+<div class="overlay" id="modal-edit-site">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل موقع / Edit Site</span><button class="sheet-close" data-close="modal-edit-site">×</button></div>
+    <input type="hidden" id="edit-site-id"/>
+    <div class="field"><label>اسم الموقع / Site Name</label><input type="text" id="edit-site-name"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-site-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- EDIT JOB TITLE MODAL -->
+<div class="overlay" id="modal-edit-job">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل مسمى / Edit Job Title</span><button class="sheet-close" data-close="modal-edit-job">×</button></div>
+    <input type="hidden" id="edit-job-id"/>
+    <div class="field"><label>المسمى الوظيفي / Job Title</label><input type="text" id="edit-job-name"/></div>
+    <button class="btn btn-full btn-warn" id="btn-save-job-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="overlay" id="modal-edit-user">
+  <div class="sheet">
+    <div class="sheet-title"><span>تعديل مستخدم / Edit User</span><button class="sheet-close" data-close="modal-edit-user">×</button></div>
+    <input type="hidden" id="edit-user-id"/>
+    <div style="background:rgba(79,127,255,.1);border:1px solid rgba(79,127,255,.25);border-radius:8px;padding:9px 13px;margin-bottom:14px;font-size:13px">
+      👤 <span id="edit-user-name-lbl" style="color:var(--acc);font-weight:700"></span>
+    </div>
+    <div class="field"><label>كلمة المرور الجديدة / New Password</label><input type="password" id="edit-user-pass" placeholder="اتركه فارغاً للإبقاء على القديم"/></div>
+    <div class="field"><label>الدور / Role</label>
+      <select id="edit-user-role">
+        <option value="admin">مدير / Admin</option>
+        <option value="office">مكتب / Office</option>
+        <option value="accounts">محاسبة / Accounts</option>
+        <option value="site_head">مشرف موقع / Site Head</option>
+      </select>
+    </div>
+    <div class="field"><label>الموقع / Site</label><select id="edit-user-site"><option value="ALL">ALL</option></select></div>
+    <button class="btn btn-full btn-warn" id="btn-save-user-edit">حفظ / Save</button>
+  </div>
+</div>
+
+<script>
+
+// ===
+// FIREBASE COMPAT SDK (no imports needed)
+// ===
+
+// ===
+// FIREBASE CONFIG
+// ===
+const firebaseConfig = {
+  apiKey: "AIzaSyDO7ad5jHj5jfjWJCaTRSgJrse2QyF4dqA",
+  authDomain: "employee-tracker-8975f.firebaseapp.com",
+  projectId: "employee-tracker-8975f",
+  storageBucket: "employee-tracker-8975f.firebasestorage.app",
+  messagingSenderId: "653703256066",
+  appId: "1:653703256066:web:9f3b0eb398514948c72f1b"
+};
+
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ===
+// CONSTANTS
+// ===
+const MONTHS = ['','يناير / Jan','فبراير / Feb','مارس / Mar','أبريل / Apr','مايو / May','يونيو / Jun','يوليو / Jul','أغسطس / Aug','سبتمبر / Sep','أكتوبر / Oct','نوفمبر / Nov','ديسمبر / Dec'];
+const MONTHS_SHORT = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const ROLES = { admin:'مدير / Admin', office:'مكتب / Office', accounts:'محاسبة / Accounts', site_head:'مشرف موقع / Site Head' };
+const TX_TYPES = ['advance','expense','loan','deduction','bonus'];
+const TX_LABELS = { advance:'سلفة / Advance', expense:'مصروف / Expense', loan:'قرض / Loan', deduction:'خصم / Deduction', bonus:'مكافأة / Bonus' };
+const TX_EFFECT = { advance:+1, expense:+1, loan:+1, deduction:+1, bonus:-1 };
+
+// ===
+// STATE
+// ===
+const S = {
+  user: null, theme: localStorage.getItem('theme') || 'dark',
+  employees: [], sites: [], jobTitles: [],
+  currentEmp: null, currentTx: [],
+  dashMonth: new Date().getMonth()+1, dashYear: new Date().getFullYear(),
+  dashData: null, cache: {}
+};
+
+// ===
+// THEME
+// ===
+function applyTheme(t) {
+  S.theme = t;
+  localStorage.setItem('theme', t);
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+}
+
+// ===
+// HELPERS
+// ===
+function sar(n) { return (parseFloat(n)||0).toLocaleString('en-SA',{maximumFractionDigits:0})+' ر.س'; }
+function today() { return new Date().toISOString().split('T')[0]; }
+function monthKey(m,y) { return y+'-'+(m<10?'0'+m:m); }
+
+let _toast;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show '+(type||'');
+  clearTimeout(_toast); _toast = setTimeout(()=>el.className='', 3200);
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.style.display = c.dataset.tab===name?'block':'none');
+  if (name==='dashboard') loadDashboard();
+  if (name==='sites') loadSitesTab();
+  if (name==='users') loadUsersTab();
+}
+
+function loading(id, msg) { document.getElementById(id).innerHTML='<div class="loader"><div class="spin"></div>'+(msg||'جار التحميل...')+'</div>'; }
+
+// ===
+// FIRESTORE HELPERS
+// ===
+async function fsGet(col, id) {
+  const d = await db.collection(col).doc(id).get();
+  return d.exists ? { id:d.id, ...d.data() } : null;
+}
+async function fsAll(col) {
+  try {
+    console.log('fsAll called for:', col);
+    const snap = await db.collection(col).get();
+    console.log('fsAll result for', col, ':', snap.size, 'docs');
+    return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  } catch(e) {
+    console.error('fsAll error for', col, ':', e.code, e.message);
+    return [];
+  }
+}
+async function fsWhere(col, field, op, val) {
+  const snap = await db.collection(col).where(field, op, val).get();
+  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+}
+async function fsAdd(col, data) {
+  const ref = await db.collection(col).add({ ...data, createdAt: new Date().toISOString() });
+  return ref.id;
+}
+async function fsUpdate(col, id, data) { await db.collection(col).doc(id).update(data); }
+async function fsDelete(col, id) { await db.collection(col).doc(id).delete(); }
+
+// ===
+// AUTH (simple — users stored in Firestore)
+// ===
+async function doLogin() {
+  const username = document.getElementById('inp-user').value.trim();
+  const password = document.getElementById('inp-pass').value;
+  if (!username||!password) { toast('أدخل بيانات الدخول / Enter credentials','err'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.textContent='...'; btn.disabled=true;
+  try {
+    console.log('Attempting login for:', username);
+    console.log('Firebase app:', typeof firebase, typeof firebase?.firestore);
+    console.log('DB:', typeof db);
+
+    // Test Firestore connection first
+    const allUsers = await fsAll('users');
+    console.log('Users collection size:', allUsers.length);
+    console.log('Users data:', JSON.stringify(allUsers));
+
+    const user = allUsers.find(u => {
+      const uMatch = String(u.username||'').trim().toLowerCase() === username.toLowerCase();
+      const pMatch = String(u.password||'').trim() === String(password).trim();
+      console.log('Checking:', u.username, '| uMatch:', uMatch, '| pMatch:', pMatch);
+      return uMatch && pMatch;
+    });
+
+    console.log('Matched user:', user);
+    if (!user) {
+      toast('بيانات غير صحيحة / Invalid credentials','err');
+      btn.textContent='دخول / Login'; btn.disabled=false;
+      return;
     }
-  </script>
+    S.user = user;
+    await loadMasterData();
+    setupMainUI();
+    show('screen-main');
+    switchTab('list');
+    loadEmployees();
+    toast('مرحباً '+username+' 👋','ok');
+  } catch(e) {
+    console.error('Login error:', e);
+    toast('خطأ في الاتصال: '+e.message,'err');
+  }
+  btn.textContent='دخول / Login'; btn.disabled=false;
+}
+
+function doLogout() {
+  S.user=null; S.employees=[]; S.sites=[]; S.cache={};
+  document.getElementById('inp-pass').value='';
+  show('screen-login');
+}
+
+// ===
+// MASTER DATA
+// ===
+async function loadMasterData() {
+  const [emps, sites, jobs] = await Promise.all([
+    fsAll('employees'),
+    fsAll('sites'),
+    fsAll('jobTitles')
+  ]);
+  S.employees = emps; // keep all, filter in renderEmpList
+  S.sites     = sites.map(s=>s.name).filter(Boolean);
+  S.jobTitles = jobs.map(j=>j.name).filter(Boolean);
+}
+
+// ===
+// SETUP UI
+// ===
+function setupMainUI() {
+  const role = S.user.role;
+  // Topbar
+  document.getElementById('topbar-name').textContent = S.user.username;
+  document.getElementById('topbar-role').textContent = ROLES[role]||role;
+  // Tabs visibility
+  const tabs = {
+    list: true,
+    dashboard: ['admin','accounts'].includes(role),
+    sites: ['admin','office'].includes(role),
+    users: role==='admin'
+  };
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.style.display = tabs[t.dataset.tab] ? '' : 'none';
+  });
+  document.getElementById('btn-add-emp').style.display = ['admin','office'].includes(role)||role==='site_head' ? '' : 'none';
+  updateMonthLbl();
+  fillDropdown('ae-site', S.sites);
+  fillDropdown('ae-jobtitle', S.jobTitles);
+}
+
+function fillDropdown(id, items, selected) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '<option value="">-- اختر / Select --</option>' +
+    items.map(i=>'<option value="'+i+'"'+(i===selected?' selected':'')+'>'+i+'</option>').join('');
+  if (S.user?.role==='site_head' && (id==='ae-site'||id==='ee-site')) {
+    el.innerHTML='<option value="'+S.user.site+'">'+S.user.site+'</option>';
+    el.disabled=true;
+  } else { el.disabled=false; }
+}
+
+// ===
+// EMPLOYEE LIST
+// ===
+async function loadEmployees() {
+  loading('emp-list');
+  // Reload fresh from Firestore each time
+  const snap = await fsAll('employees');
+  S.employees = snap;
+  let emps = S.employees;
+  if (S.user.role==='site_head') emps = emps.filter(e=>e.site===S.user.site);
+
+  // Batch load current month dues for all employees
+  const now = new Date();
+  const mk = monthKey(now.getMonth()+1, now.getFullYear());
+  const txSnap = await db.collection('transactions').where('monthKey','==',mk).get();
+  const txList = txSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // Also get carry forwards
+  const cfSnap = await db.collection('carryForward').where('monthKey','==',mk).get();
+  const cfList = cfSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  S.cache.empDues = {};
+  emps.forEach(emp=>{
+    const eid = String(emp.iqamaNo).trim();
+    const empTx = txList.filter(t=>String(t.iqamaNo).trim()===eid);
+    const cf    = cfList.find(cf=>String(cf.iqamaNo).trim()===eid);
+    S.cache.empDues[eid] = calcDuesFromTx(empTx, cf?.amount||0);
+  });
+
+  // Populate site filter dropdown
+  const sf = document.getElementById('site-filter');
+  if (sf) {
+    const cur = sf.value;
+    const sites = [...new Set(S.employees.map(e=>e.site))].filter(Boolean).sort();
+    sf.innerHTML = '<option value="ALL">كل المواقع / All Sites</option>'
+      + sites.map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+s+'</option>').join('');
+  }
+
+  renderEmpList(emps);
+}
+
+function calcDuesFromTx(txList, carryFwd=0) {
+  let advances=0, expenses=0, loans=0, deductions=0, bonuses=0, salaryPaid=0;
+  txList.forEach(t=>{
+    const amt = parseFloat(t.amount)||0;
+    if (t.type==='advance')   advances   += amt;
+    else if (t.type==='expense')  expenses   += amt;
+    else if (t.type==='loan')     loans      += amt;
+    else if (t.type==='deduction') deductions += amt;
+    else if (t.type==='bonus')    bonuses    += amt;
+    else if (t.type==='salary')   salaryPaid += amt;
+  });
+  const totalDues = carryFwd + advances + expenses + loans + deductions - bonuses - salaryPaid;
+  return { carryFwd, advances, expenses, loans, deductions, bonuses, salaryPaid, totalDues };
+}
+
+function renderEmpList(emps) {
+  // Filter active employees only
+  emps = emps.filter(e => (e.status||'active') === 'active');
+
+  // Site filter
+  const siteFilter = document.getElementById('site-filter')?.value || 'ALL';
+  if (siteFilter !== 'ALL') emps = emps.filter(e => e.site === siteFilter);
+
+  // Search filter
+  const q = document.getElementById('search-box').value.toLowerCase();
+  const filtered = q ? emps.filter(e=>
+    e.name.toLowerCase().includes(q)||
+    String(e.iqamaNo).includes(q)||
+    (e.site||'').toLowerCase().includes(q)||
+    (e.shortName||'').toLowerCase().includes(q)
+  ) : emps;
+
+  // Show count
+  const countEl = document.getElementById('emp-count');
+  if (countEl) countEl.textContent = filtered.length + ' موظف / ' + filtered.length + ' employees';
+
+  if (!filtered.length) { document.getElementById('emp-list').innerHTML='<div class="empty">لا توجد نتائج / No results</div>'; return; }
+
+  // Alerts: iqama/visa expiring
+  const alertEmps = emps.filter(e=>{
+    if (!e.iqamaExpiry) return false;
+    const days = (new Date(e.iqamaExpiry)-new Date())/(1000*60*60*24);
+    return days<=30 && days>=0;
+  });
+
+  let alertHtml = '';
+  if (alertEmps.length) {
+    alertHtml = '<div class="alert-box" style="margin-bottom:12px">🔵 '+alertEmps.length+' إقامة تنتهي خلال 30 يوم / Iqama expiring soon</div>';
+  }
+
+  document.getElementById('emp-list').innerHTML = alertHtml + filtered.map(emp=>{
+    const dues = S.cache.empDues[String(emp.iqamaNo).trim()];
+    const d = dues ? dues.totalDues : 0;
+    const bc = !dues ? 'badge-dim' : d<=0 ? 'badge-grn' : 'badge-red';
+    const flags = dues && d > parseFloat(emp.salary) ? ' 🚨' : '';
+    return '<div class="emp-card" data-iqama="'+emp.iqamaNo+'">'
+      +'<div class="emp-av">'+emp.name.charAt(0)+'</div>'
+      +'<div class="emp-info">'
+      +'<div class="emp-name">'+emp.name+(emp.shortName?' ('+emp.shortName+')':'')+flags+'</div>'
+      +'<div class="emp-iqama">🪪 '+emp.iqamaNo+'</div>'
+      +'<div class="emp-meta">'+emp.site+' · '+(emp.jobTitle||'')+'</div>'
+      +'</div>'
+      +'<div class="badge '+bc+'">'+sar(d)+'</div>'
+      +'</div>';
+  }).join('');
+
+  document.querySelectorAll('.emp-card').forEach(c=>{
+    c.addEventListener('click',()=>openEmp(c.dataset.iqama));
+  });
+}
+
+// ===
+// EMPLOYEE DETAIL
+// ===
+async function openEmp(iqamaNo) {
+  S.currentEmp = S.employees.find(e=>e.iqamaNo===iqamaNo);
+  show('screen-detail');
+  loading('detail-content');
+
+  const now = new Date();
+  const mk  = monthKey(now.getMonth()+1, now.getFullYear());
+
+  // Load this month's transactions + carry forward
+  const [txSnap, cfSnap] = await Promise.all([
+    db.collection('transactions').where('iqamaNo','==',iqamaNo).where('monthKey','==',mk).get(),
+    db.collection('carryForward').where('iqamaNo','==',iqamaNo).where('monthKey','==',mk).get()
+  ]);
+
+  S.currentTx = txSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const cf = cfSnap.docs.length ? cfSnap.docs[0].data().amount : 0;
+  S.currentDues = calcDuesFromTx(S.currentTx, cf);
+  S.currentDues.monthKey = mk;
+  S.currentDues.month = now.getMonth()+1;
+  S.currentDues.year  = now.getFullYear();
+
+  renderDetail();
+}
+
+function renderDetail() {
+  const emp=S.currentEmp, d=S.currentDues, role=S.user.role;
+  const canTx  = ['admin','office','accounts','site_head'].includes(role);
+  const canExp = ['admin','office','accounts'].includes(role);
+  const canEdt = ['admin','office'].includes(role);
+  const salary = parseFloat(emp.salary||emp.Salary||0)||0;
+  const net    = d.totalDues>0 ? Math.max(0,salary-d.totalDues) : salary;
+  const dColor = d.totalDues>0?'var(--red)':d.totalDues<0?'var(--orn)':'var(--grn)';
+
+  // Month options
+  const now=new Date(); let mOpts='';
+  for(let i=0;i<3;i++){
+    let m=now.getMonth()+1-i,y=now.getFullYear();
+    if(m<=0){m+=12;y--;}
+    mOpts+='<option value="'+m+'_'+y+'"'+(i===0?' selected':'')+'>'+MONTHS_SHORT[m]+' '+y+'</option>';
+  }
+
+  // Tx type options
+  const txOpts = TX_TYPES.map(t=>'<option value="'+t+'">'+TX_LABELS[t]+'</option>').join('');
+
+  // Iqama expiry warning
+  let expWarn='';
+  if(emp.iqamaExpiry){
+    const days=Math.ceil((new Date(emp.iqamaExpiry)-new Date())/(1000*60*60*24));
+    if(days<=30&&days>=0) expWarn='<div class="alert-box" style="margin-bottom:14px">🔵 الإقامة تنتهي خلال '+days+' يوم / Iqama expires in '+days+' days</div>';
+    else if(days<0) expWarn='<div class="alert-box" style="color:var(--red);border-color:var(--red);margin-bottom:14px">🔴 الإقامة منتهية / Iqama expired</div>';
+  }
+
+  let html = expWarn
+    +'<div class="detail-header">'
+    +'<div class="detail-name">'+emp.name+(emp.shortName?' <span style="font-size:14px;color:var(--txt2)">('+emp.shortName+')</span>':' ')+'</div>'
+    +'<div class="detail-iqama">🪪 '+emp.iqamaNo+'</div>'
+    +'<div class="detail-meta">'+emp.site+' · '+(emp.jobTitle||'')+' · راتب: '+sar(salary)+'</div>'
+    +'<div class="detail-meta" style="margin-top:2px">📞 '+(emp.phone||'—')+' · جواز: '+(emp.passportNo||'—')+'</div>'
+    +(canEdt?'<button class="btn btn-sm btn-ghost" id="btn-edit-emp" style="margin-top:10px">✏️ تعديل / Edit</button>':'')
+    +'<button class="btn btn-sm btn-ghost" id="btn-payslip" style="margin-top:10px;margin-right:8px">📄 بيان راتب</button>'
+    +'</div>'
+
+    // Dues summary
+    +'<div class="dues-box">'
+    +'<h3>المستحقات / Dues — '+MONTHS_SHORT[d.month]+' '+d.year+'</h3>'
+    +'<div class="dues-grid">'
+    +'<div class="dues-item"><div class="lbl">ترحيل / Carry</div><div class="val" style="color:var(--orn)">'+sar(d.carryFwd)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">سلف / Advances</div><div class="val" style="color:var(--red)">'+sar(d.advances)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">مصاريف / Expenses</div><div class="val" style="color:var(--red)">'+sar(d.expenses)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">قروض / Loans</div><div class="val" style="color:var(--red)">'+sar(d.loans)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">خصومات / Deductions</div><div class="val" style="color:var(--red)">'+sar(d.deductions)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">مكافآت / Bonuses</div><div class="val" style="color:var(--grn)">'+sar(d.bonuses)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">مدفوع / Paid</div><div class="val" style="color:var(--grn)">'+sar(d.salaryPaid)+'</div></div>'
+    +'<div class="dues-item"><div class="lbl">صافي للموظف</div><div class="val" style="color:var(--acc)">'+sar(net)+'</div></div>'
+    +'</div>'
+    +'<div class="dues-total"><div class="lbl">إجمالي المستحقات / Total Dues</div>'
+    +'<div class="amount" style="color:'+dColor+'">'+sar(Math.abs(d.totalDues))+'</div>'
+    +(d.totalDues<0?'<div style="font-size:12px;color:var(--orn);margin-top:4px">رصيد للموظف / Employee Credit</div>':'')
+    +'</div></div>';
+
+  // Add transaction
+  if(canTx) html+=
+    '<div class="section"><h3>➕ إضافة معاملة / Add Transaction</h3>'
+    +'<div class="card">'
+    +'<div class="field"><label>نوع المعاملة / Type</label><select id="tx-type">'+txOpts+'</select></div>'
+    +'<div id="tx-fields"></div>'
+    +'<div class="field"><label>الشهر / Month</label><select id="tx-month">'+mOpts+'</select></div>'
+    +'<div class="field"><label>ملاحظات / Notes</label><input type="text" id="tx-notes" placeholder="اختياري / optional"/></div>'
+    +'<button class="btn btn-full btn-primary" id="btn-save-tx">حفظ / Save</button>'
+    +'</div></div>';
+
+  // Salary
+  if(canTx) html+=
+    '<div class="section"><h3>💰 صرف راتب / Process Salary</h3>'
+    +'<div class="card"><div class="info-row">'
+    +'الراتب الأساسي: <strong>'+sar(salary)+'</strong><br>'
+    +'المستحقات: <strong style="color:var(--red)">'+sar(Math.max(0,d.totalDues))+'</strong><br>'
+    +'<span style="display:block;border-top:1px solid rgba(79,127,255,.2);margin-top:6px;padding-top:6px">صافي للموظف: <strong style="color:var(--grn);font-size:15px">'+sar(net)+'</strong></span>'
+    +'</div>'
+    +'<div class="field"><label>الشهر / Month</label><select id="sal-month">'+mOpts+'</select></div>'
+    +'<div class="field"><label>المبلغ المدفوع / Amount Paid</label><input type="number" id="sal-amt" value="'+net+'"/><div class="field-hint">المقترح = الراتب − المستحقات</div></div>'
+    +'<button class="btn btn-full btn-success" id="btn-sal">تأكيد الصرف / Confirm</button>'
+    +'</div></div>';
+
+  // Transaction history
+  if(S.currentTx.length) {
+    html+='<div class="section"><h3>سجل المعاملات / Transaction History</h3><div class="card" style="padding:0;overflow:hidden">';
+    S.currentTx.sort((a,b)=>b.createdAt?.localeCompare(a.createdAt||'')).forEach(t=>{
+      const isCredit = t.type==='bonus'||t.type==='salary';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--bdr)">'
+        +'<div><div style="font-size:13px;font-weight:600">'+TX_LABELS[t.type]+'</div>'
+        +'<div style="font-size:11px;color:var(--txt2)">'+(t.notes||'')+'</div></div>'
+        +'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:13px;font-weight:700;color:'+(isCredit?'var(--grn)':'var(--red)')+'">'+sar(t.amount)+'</div>'
+        +'</div>';
+    });
+    html+='</div></div>';
+  }
+
+  document.getElementById('detail-content').innerHTML = html;
+
+  // Wire events
+  if(canEdt) document.getElementById('btn-edit-emp')?.addEventListener('click', openEditModal);
+  document.getElementById('btn-payslip')?.addEventListener('click', generatePayslip);
+  if(canTx) {
+    document.getElementById('tx-type').addEventListener('change', renderTxFields);
+    document.getElementById('btn-save-tx').addEventListener('click', saveTx);
+    document.getElementById('btn-sal').addEventListener('click', saveSalary);
+    renderTxFields();
+  }
+}
+
+function renderTxFields() {
+  const type = document.getElementById('tx-type')?.value;
+  let html = '';
+  if (!type) return;
+  html += '<div class="field"><label>المبلغ / Amount (SAR)</label><input type="number" id="tx-amt" placeholder="0"/></div>';
+  if (type==='loan') {
+    html += '<div class="field"><label>القسط الشهري / Monthly Installment</label><input type="number" id="tx-install" placeholder="0"/></div>';
+    html += '<div class="field"><label>عدد الأشهر / Months</label><input type="number" id="tx-months" placeholder="12"/></div>';
+  }
+  if (type==='deduction') {
+    html += '<div class="field"><label>النوع / Type</label><select id="tx-ded-type"><option value="once">مرة واحدة / One-time</option><option value="monthly">شهري / Monthly</option></select></div>';
+    html += '<div class="field"><label>السبب / Reason</label><input type="text" id="tx-reason" placeholder="سبب الخصم"/></div>';
+  }
+  if (type==='bonus') {
+    html += '<div class="field"><label>النوع / Type</label><select id="tx-bonus-type"><option value="bonus">مكافأة / Bonus</option><option value="allowance">بدل / Allowance</option><option value="overtime">أوفرتايم / Overtime</option></select></div>';
+  }
+  document.getElementById('tx-fields').innerHTML = html;
+}
+
+async function saveTx() {
+  const type = document.getElementById('tx-type').value;
+  const amt  = parseFloat(document.getElementById('tx-amt').value);
+  if (!amt||amt<=0) { toast('أدخل مبلغاً صحيحاً','err'); return; }
+  const [m,y] = document.getElementById('tx-month').value.split('_');
+  const mk = monthKey(parseInt(m), parseInt(y));
+  const notes = document.getElementById('tx-notes').value;
+
+  const txData = {
+    iqamaNo: S.currentEmp.iqamaNo,
+    type, amount: amt, monthKey: mk,
+    month: parseInt(m), year: parseInt(y),
+    notes, addedBy: S.user.username
+  };
+
+  if (type==='loan') {
+    txData.installment = parseFloat(document.getElementById('tx-install').value)||0;
+    txData.totalMonths = parseInt(document.getElementById('tx-months').value)||1;
+  }
+  if (type==='deduction') {
+    txData.dedType = document.getElementById('tx-ded-type').value;
+    txData.reason  = document.getElementById('tx-reason').value;
+  }
+  if (type==='bonus') {
+    txData.bonusType = document.getElementById('tx-bonus-type').value;
+  }
+
+  await fsAdd('transactions', txData);
+  toast('تم الحفظ ✓','ok');
+  openEmp(S.currentEmp.iqamaNo);
+}
+
+async function saveSalary() {
+  const amt = parseFloat(document.getElementById('sal-amt').value);
+  if (!amt||amt<=0) { toast('أدخل مبلغاً صحيحاً','err'); return; }
+  const [m,y] = document.getElementById('sal-month').value.split('_');
+  const mk = monthKey(parseInt(m),parseInt(y));
+  await fsAdd('transactions', {
+    iqamaNo:S.currentEmp.iqamaNo, type:'salary', amount:amt,
+    monthKey:mk, month:parseInt(m), year:parseInt(y),
+    processedBy:S.user.username
+  });
+  toast('تم الصرف ✓','ok');
+  openEmp(S.currentEmp.iqamaNo);
+}
+
+// ===
+// ADD / EDIT EMPLOYEE
+// ===
+function openAddModal() {
+  ['ae-name','ae-shortname','ae-iqama','ae-passport','ae-phone','ae-salary','ae-iqama-expiry'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  fillDropdown('ae-site', S.sites);
+  fillDropdown('ae-jobtitle', S.jobTitles);
+  openModal('modal-add');
+}
+
+async function saveEmployee() {
+  const name    = document.getElementById('ae-name').value.trim();
+  const iqama   = document.getElementById('ae-iqama').value.trim();
+  const site    = document.getElementById('ae-site').value;
+  const salary  = parseFloat(document.getElementById('ae-salary').value);
+  if (!name||!iqama||!site||!salary) { toast('أكمل الحقول المطلوبة','err'); return; }
+
+  // Duplicate check
+  const existing = await fsWhere('employees','iqamaNo','==',iqama);
+  if (existing.length) { toast('رقم الإقامة مسجل مسبقاً / Iqama already exists','err'); return; }
+
+  await fsAdd('employees', {
+    name, iqamaNo:iqama, site, salary,
+    shortName: document.getElementById('ae-shortname').value.trim(),
+    passportNo: document.getElementById('ae-passport').value.trim(),
+    phone: document.getElementById('ae-phone').value.trim(),
+    jobTitle: document.getElementById('ae-jobtitle').value,
+    iqamaExpiry: document.getElementById('ae-iqama-expiry').value,
+    status:'active'
+  });
+  toast('تم إضافة الموظف ✓','ok');
+  closeModal('modal-add');
+  await loadMasterData();
+  loadEmployees();
+}
+
+function openEditModal() {
+  const emp = S.currentEmp;
+  document.getElementById('ee-iqama-lbl').textContent = emp.iqamaNo;
+  document.getElementById('ee-name').value    = emp.name||'';
+  document.getElementById('ee-shortname').value = emp.shortName||'';
+  document.getElementById('ee-salary').value  = emp.salary||'';
+  document.getElementById('ee-phone').value   = emp.phone||'';
+  document.getElementById('ee-passport').value= emp.passportNo||'';
+  document.getElementById('ee-iqama-expiry').value = emp.iqamaExpiry||'';
+  fillDropdown('ee-site', S.sites, emp.site);
+  fillDropdown('ee-jobtitle', S.jobTitles, emp.jobTitle);
+  setTimeout(()=>{ document.getElementById('ee-site').value=emp.site||''; document.getElementById('ee-jobtitle').value=emp.jobTitle||''; },50);
+  openModal('modal-edit');
+}
+
+async function saveEdit() {
+  const name   = document.getElementById('ee-name').value.trim();
+  const site   = document.getElementById('ee-site').value;
+  const salary = parseFloat(document.getElementById('ee-salary').value);
+  if (!name||!site||!salary) { toast('أكمل الحقول المطلوبة','err'); return; }
+  await fsUpdate('employees', S.currentEmp.id, {
+    name, site, salary,
+    shortName: document.getElementById('ee-shortname').value.trim(),
+    phone: document.getElementById('ee-phone').value.trim(),
+    passportNo: document.getElementById('ee-passport').value.trim(),
+    jobTitle: document.getElementById('ee-jobtitle').value,
+    iqamaExpiry: document.getElementById('ee-iqama-expiry').value
+  });
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit');
+  await loadMasterData();
+  openEmp(S.currentEmp.iqamaNo);
+}
+
+// ===
+// PAYSLIP
+// ===
+function generatePayslip() {
+  const emp = S.currentEmp;
+  const d   = S.currentDues;
+  const salary = parseFloat(emp.salary||emp.Salary||0)||0;
+  const net    = d.totalDues > 0 ? Math.max(0, salary - d.totalDues) : salary;
+
+  const advList   = S.currentTx.filter(t=>t.type==='advance');
+  const expList   = S.currentTx.filter(t=>t.type==='expense');
+  const loanList  = S.currentTx.filter(t=>t.type==='loan');
+  const dedList   = S.currentTx.filter(t=>t.type==='deduction');
+  const bonusList = S.currentTx.filter(t=>t.type==='bonus');
+
+  const txRow = (label, amt, note, cls) =>
+    '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:13px">'
+    +'<span style="color:var(--txt2)">'+label+(note?' — <em>'+note+'</em>':'')+'</span>'
+    +'<span style="font-weight:700;color:'+cls+'">'+sar(amt)+'</span></div>';
+
+  const sumRow = (label, amt, cls) =>
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)">'
+    +'<span style="font-weight:600">'+label+'</span>'
+    +'<span style="font-weight:700;color:'+cls+'">'+sar(amt)+'</span></div>';
+
+  let html = '<div style="text-align:center;margin-bottom:16px">'
+    +'<div style="font-size:18px;font-weight:800">'+emp.name+'</div>'
+    +'<div style="font-size:12px;color:var(--txt2);margin-top:4px">'+emp.site+' · '+MONTHS_SHORT[d.month]+' '+d.year+'</div>'
+    +'<div style="font-size:12px;color:var(--acc)">'+emp.iqamaNo+'</div></div>';
+
+  html += '<div class="card">';
+  html += sumRow('الراتب الأساسي / Basic Salary', salary, 'var(--txt)');
+  if (d.carryFwd) html += sumRow('ترحيل / Carry Forward', d.carryFwd, 'var(--orn)');
+
+  if (advList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">سلف / Advances ('+advList.length+')</div>';
+    advList.forEach((t,i)=>{ html += txRow('سلفة #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+    if (advList.length>1) html += sumRow('إجمالي السلف', d.advances, 'var(--red)');
+  }
+  if (expList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">مصاريف / Expenses ('+expList.length+')</div>';
+    expList.forEach((t,i)=>{ html += txRow('مصروف #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+    if (expList.length>1) html += sumRow('إجمالي المصاريف', d.expenses, 'var(--red)');
+  }
+  if (loanList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">قروض / Loans ('+loanList.length+')</div>';
+    loanList.forEach((t,i)=>{ html += txRow('قرض #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+  }
+  if (dedList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">خصومات / Deductions ('+dedList.length+')</div>';
+    dedList.forEach((t,i)=>{ html += txRow('خصم #'+(i+1), t.amount, t.notes||'', 'var(--red)'); });
+  }
+  if (bonusList.length) {
+    html += '<div style="padding:7px 0;font-size:12px;font-weight:700;color:var(--txt2);border-bottom:1px solid var(--bdr)">مكافآت / Bonuses ('+bonusList.length+')</div>';
+    bonusList.forEach((t,i)=>{ html += txRow('مكافأة #'+(i+1), t.amount, t.notes||'', 'var(--grn)'); });
+  }
+  html += '</div>';
+
+  html += '<div style="background:rgba(56,232,192,.1);border:1px solid var(--grn);border-radius:12px;padding:16px;text-align:center;margin-top:14px">'
+    +'<div style="font-size:13px;color:var(--txt2)">صافي الراتب / Net Payable</div>'
+    +'<div style="font-size:28px;font-weight:800;color:var(--grn);margin-top:6px">'+sar(net)+'</div></div>';
+
+  document.getElementById('payslip-content').innerHTML = html;
+  openModal('modal-payslip');
+}
+
+// ===
+// DASHBOARD
+// ===
+function updateMonthLbl() {
+  const el=document.getElementById('dash-month-lbl');
+  if(el) el.textContent=MONTHS_SHORT[S.dashMonth]+' '+S.dashYear;
+}
+
+async function loadDashboard() {
+  loading('dash-content');
+  const mk = monthKey(S.dashMonth, S.dashYear);
+  const site = document.getElementById('dash-site-filter').value;
+
+  let emps = S.employees;
+  if (site&&site!=='ALL') emps=emps.filter(e=>e.site===site);
+
+  // Single batch read for all tx this month
+  const [txSnap, cfSnap] = await Promise.all([
+    db.collection('transactions').where('monthKey','==',mk).get(),
+    db.collection('carryForward').where('monthKey','==',mk).get()
+  ]);
+  const txAll = txSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const cfAll = cfSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // Previous month for trend
+  let pm=S.dashMonth-1, py=S.dashYear;
+  if(pm<1){pm=12;py--;}
+  const pmk = monthKey(pm,py);
+  const [ptxSnap,pcfSnap] = await Promise.all([
+    db.collection('transactions').where('monthKey','==',pmk).get(),
+    db.collection('carryForward').where('monthKey','==',pmk).get()
+  ]);
+  const ptxAll=ptxSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const pcfAll=pcfSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // Build summary
+  const summary = emps.map(emp=>{
+    const empTx  = txAll.filter(t=>t.iqamaNo===emp.iqamaNo);
+    const cf     = cfAll.find(c=>c.iqamaNo===emp.iqamaNo);
+    const dues   = calcDuesFromTx(empTx, cf?.amount||0);
+    const pempTx = ptxAll.filter(t=>t.iqamaNo===emp.iqamaNo);
+    const pcf    = pcfAll.find(c=>c.iqamaNo===emp.iqamaNo);
+    const prevDues = calcDuesFromTx(pempTx, pcf?.amount||0);
+    const salary = parseFloat(emp.salary||emp.Salary||0)||0;
+    return {
+      ...emp, ...dues,
+      prevDues: prevDues.totalDues,
+      unpaid: dues.salaryPaid===0,
+      risk: dues.totalDues > salary,
+      net: dues.totalDues>0?Math.max(0,salary-dues.totalDues):salary
+    };
+  });
+
+  S.dashData = { summary, month:S.dashMonth, year:S.dashYear };
+
+  // Rebuild site filter
+  const sites=[...new Set(S.employees.map(e=>e.site))].filter(Boolean);
+  const sf=document.getElementById('dash-site-filter');
+  const cur=sf.value;
+  sf.innerHTML='<option value="ALL">كل المواقع / All Sites</option>'+sites.map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+s+'</option>').join('');
+
+  renderDashboard(summary);
+}
+
+function renderDashboard(summary) {
+  const totalDues    = summary.reduce((a,e)=>a+(e.totalDues>0?e.totalDues:0),0);
+  const totalPaid    = summary.reduce((a,e)=>a+e.salaryPaid,0);
+  const totalAdv     = summary.reduce((a,e)=>a+e.advances,0);
+  const totalExp     = summary.reduce((a,e)=>a+e.expenses,0);
+  const totalBonus   = summary.reduce((a,e)=>a+e.bonuses,0);
+  const withDues     = summary.filter(e=>e.totalDues>0).length;
+  const unpaidCount  = summary.filter(e=>e.unpaid).length;
+  const riskCount    = summary.filter(e=>e.risk).length;
+
+  // Alerts
+  let alertHtml='';
+  if(unpaidCount>0||riskCount>0){
+    alertHtml='<div class="alert-box">';
+    if(unpaidCount>0) alertHtml+='⚠️ '+unpaidCount+' لم يُصرف راتبه / Not paid this month<br>';
+    if(riskCount>0)   alertHtml+='🚨 '+riskCount+' مستحقاته تتجاوز راتبه / Dues exceed salary';
+    alertHtml+='</div>';
+  }
+
+  // Stats
+  const statsHtml='<div class="stat-grid">'
+    +'<div class="stat-card"><div class="stat-val">'+summary.length+'</div><div class="stat-lbl">الموظفون / Employees</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:var(--red)">'+withDues+'</div><div class="stat-lbl">عليهم مستحقات</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:var(--orn);font-size:12px">'+sar(totalDues)+'</div><div class="stat-lbl">إجمالي المستحقات</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:var(--grn);font-size:12px">'+sar(totalPaid)+'</div><div class="stat-lbl">إجمالي المصروف</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:var(--red);font-size:12px">'+sar(totalAdv)+'</div><div class="stat-lbl">السلف / Advances</div></div>'
+    +'<div class="stat-card"><div class="stat-val" style="color:var(--red);font-size:12px">'+sar(totalExp)+'</div><div class="stat-lbl">المصاريف / Expenses</div></div>'
+    +'</div>';
+
+  // Charts
+  const chartsHtml = '<div id="charts-container" style="margin-bottom:16px">'
+    +'<canvas id="chart-pie" style="max-height:200px;margin-bottom:16px"></canvas>'
+    +'<canvas id="chart-bar" style="max-height:200px"></canvas>'
+    +'</div>';
+
+  // Site summary
+  const siteNames=[...new Set(summary.map(e=>e.site))].filter(Boolean);
+  let siteHtml='';
+  if(siteNames.length>1){
+    siteHtml='<div style="font-size:13px;color:var(--txt2);margin-bottom:8px;font-weight:600">ملخص المواقع / Site Summary</div>';
+    siteHtml+=siteNames.map(s=>{
+      const se=summary.filter(e=>e.site===s);
+      const sd=se.reduce((a,e)=>a+(e.totalDues>0?e.totalDues:0),0);
+      const sa=se.reduce((a,e)=>a+e.advances,0);
+      const sx=se.reduce((a,e)=>a+e.expenses,0);
+      return '<div class="site-card">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+        +'<span style="font-size:14px;font-weight:700">🏗 '+s+'</span>'
+        +'<span style="font-size:11px;color:var(--txt2)">'+se.length+' موظف</span></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">'
+        +'<div><div style="font-size:10px;color:var(--txt2)">مستحقات</div><div style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;color:var(--red);font-weight:700">'+sar(sd)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--txt2)">سلف</div><div style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;color:var(--orn)">'+sar(sa)+'</div></div>'
+        +'<div><div style="font-size:10px;color:var(--txt2)">مصاريف</div><div style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;color:var(--orn)">'+sar(sx)+'</div></div>'
+        +'</div></div>';
+    }).join('');
+  }
+
+  // Employee table
+  const tblHtml='<div style="font-size:13px;color:var(--txt2);margin-bottom:8px;font-weight:600">تفاصيل الموظفين / Employees</div>'
+    +'<div class="dash-tbl">'
+    +'<div class="dash-hdr"><div>الموظف</div><div style="text-align:center">سلف</div><div style="text-align:center">مصاريف</div><div style="text-align:center">صافي</div></div>'
+    +summary.map(e=>{
+      const flags=(e.unpaid?'⚠️ ':'')+(e.risk?'🚨 ':'')+(e.carryFwd>0?'↩ ':'');
+      const trend=e.totalDues>e.prevDues?'📈':e.totalDues<e.prevDues?'📉':'';
+      return '<div class="dash-row" data-iqama="'+e.iqamaNo+'">'
+        +'<div><div style="font-size:13px;font-weight:700">'+e.name+' '+trend+'</div>'
+        +'<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;color:var(--acc)">'+e.iqamaNo+'</div>'
+        +'<div style="font-size:10px;color:var(--txt2)">'+e.site+'</div>'
+        +(flags?'<div style="font-size:10px;margin-top:2px">'+flags+'</div>':'')+'</div>'
+        +'<div class="mono" style="color:var(--orn)">'+sar(e.advances)+'</div>'
+        +'<div class="mono" style="color:var(--orn)">'+sar(e.expenses)+'</div>'
+        +'<div class="mono" style="color:'+(e.totalDues>0?'var(--red)':'var(--grn)')+'">'+sar(Math.max(0,e.totalDues))+'</div>'
+        +'</div>';
+    }).join('')+'</div>';
+
+  document.getElementById('dash-content').innerHTML = alertHtml+statsHtml+chartsHtml+siteHtml+tblHtml;
+
+  document.querySelectorAll('.dash-row[data-iqama]').forEach(r=>{
+    r.addEventListener('click',()=>openEmp(r.dataset.iqama));
+  });
+
+  // Draw charts
+  drawCharts(summary, totalAdv, totalExp, totalPaid, totalBonus);
+}
+
+function drawCharts(summary, totalAdv, totalExp, totalPaid, totalBonus) {
+  // Pie chart
+  const pieCtx = document.getElementById('chart-pie')?.getContext('2d');
+  if (pieCtx && (totalAdv+totalExp+totalPaid+totalBonus)>0) {
+    new Chart(pieCtx, {
+      type:'doughnut',
+      data:{
+        labels:['سلف','مصاريف','مدفوع','مكافآت'],
+        datasets:[{data:[totalAdv,totalExp,totalPaid,totalBonus],backgroundColor:['#ff5252','#ffb142','#38e8c0','#4f7fff'],borderWidth:0}]
+      },
+      options:{plugins:{legend:{position:'bottom',labels:{color:getComputedStyle(document.documentElement).getPropertyValue('--txt'),font:{family:'Tajawal',size:12}}}},cutout:'65%'}
+    });
+  }
+
+  // Bar chart — dues per site
+  const barCtx = document.getElementById('chart-bar')?.getContext('2d');
+  if (barCtx) {
+    const sites=[...new Set(summary.map(e=>e.site))].filter(Boolean);
+    const siteDues=sites.map(s=>summary.filter(e=>e.site===s).reduce((a,e)=>a+(e.totalDues>0?e.totalDues:0),0));
+    new Chart(barCtx,{
+      type:'bar',
+      data:{labels:sites,datasets:[{label:'المستحقات / Dues',data:siteDues,backgroundColor:'rgba(79,127,255,0.7)',borderRadius:6}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--txt2)'}},y:{ticks:{color:'var(--txt2)',callback:v=>sar(v)}}}}
+    });
+  }
+}
+
+// ===
+// EXPORT
+// ===
+function exportCSV() {
+  if (!S.dashData) { toast('افتح لوحة التحكم أولاً','err'); return; }
+  const d=S.dashData;
+  const rows=[['الاسم','الإقامة','الجوال','الموقع','الراتب','ترحيل','سلف','مصاريف','قروض','خصومات','مكافآت','مدفوع','المستحقات','صافي للموظف']];
+  d.summary.forEach(e=>rows.push([e.name,e.iqamaNo,e.phone||'',e.site,e.salary,e.carryFwd,e.advances,e.expenses,e.loans,e.deductions,e.bonuses,e.salaryPaid,Math.max(0,e.totalDues),e.net]));
+  const csv='\uFEFF'+rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='dues-'+d.year+'-'+d.month+'.csv';
+  a.click();
+  toast('تم التصدير ✓','ok');
+}
+
+function shareWA() {
+  if (!S.dashData) { toast('افتح لوحة التحكم أولاً','err'); return; }
+  const d=S.dashData;
+  const st={total:d.summary.length,dues:d.summary.filter(e=>e.totalDues>0).length,unpaid:d.summary.filter(e=>e.unpaid).length,risk:d.summary.filter(e=>e.risk).length};
+  const totalDues=d.summary.reduce((a,e)=>a+(e.totalDues>0?e.totalDues:0),0);
+  const totalPaid=d.summary.reduce((a,e)=>a+e.salaryPaid,0);
+  let msg='*تقرير المستحقات — '+MONTHS_SHORT[d.month]+' '+d.year+'*\n\n';
+  msg+='👥 الموظفون: '+st.total+'\n💰 إجمالي المستحقات: '+sar(totalDues)+'\n✅ إجمالي المصروف: '+sar(totalPaid)+'\n';
+  if(st.unpaid>0) msg+='⚠️ لم يُصرف راتبهم: '+st.unpaid+'\n';
+  if(st.risk>0)   msg+='🚨 تجاوزت مستحقاتهم راتبهم: '+st.risk+'\n';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function printReport() {
+  if (!S.dashData) { toast('افتح لوحة التحكم أولاً','err'); return; }
+  const d=S.dashData;
+  const totalDues=d.summary.reduce((a,e)=>a+(e.totalDues>0?e.totalDues:0),0);
+  const totalPaid=d.summary.reduce((a,e)=>a+e.salaryPaid,0);
+  const rows=d.summary.map(e=>'<tr><td>'+e.name+'</td><td>'+e.iqamaNo+'</td><td>'+e.site+'</td><td>'+sar(e.carryFwd)+'</td><td>'+sar(e.advances)+'</td><td>'+sar(e.expenses)+'</td><td>'+sar(e.salaryPaid)+'</td><td><b>'+sar(Math.max(0,e.totalDues))+'</b></td><td>'+sar(e.net)+'</td></tr>').join('');
+  const w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>تقرير '+MONTHS_SHORT[d.month]+' '+d.year+'</title>'
+    +'\x3Cstyle>body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h2{font-size:15px}'
+    +'.row{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}.s{background:#f5f5f5;padding:6px 12px;border-radius:5px}'
+    +'table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#222;color:#fff;padding:7px;text-align:right}'
+    +'td{padding:6px 7px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}\x3C/style>\x3C/head><body>'
+    +'<h2>تقرير المستحقات — '+MONTHS_SHORT[d.month]+' '+d.year+'</h2>'
+    +'<div class="row"><div class="s">الموظفون: <b>'+d.summary.length+'</b></div><div class="s">المستحقات: <b>'+sar(totalDues)+'</b></div><div class="s">المصروف: <b>'+sar(totalPaid)+'</b></div></div>'
+    +'<table><tr><th>الاسم</th><th>الإقامة</th><th>الموقع</th><th>ترحيل</th><th>سلف</th><th>مصاريف</th><th>مدفوع</th><th>المستحقات</th><th>صافي</th></tr>'+rows+'</table>'
+    +'\x3Cscript>window.onload=function(){window.print();}\x3C/script></body></html>');
+  w.document.close();
+}
+
+// ===
+// SITES & USERS TABS
+// ===
+async function loadSitesTab() {
+  loading('sites-list');
+  const sites = await fsAll('sites');
+  S.sites = sites.map(s=>s.name).filter(Boolean);
+  if (!sites.length) {
+    document.getElementById('sites-list').innerHTML='<div class="empty">لا توجد مواقع بعد / No sites yet</div>';
+  } else {
+    document.getElementById('sites-list').innerHTML = sites.map(s=>
+      '<div class="site-item"><span style="font-size:14px;font-weight:600">🏗 '+s.name+'</span>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button class="btn btn-sm btn-ghost" data-edit-site-id="'+s.id+'" data-edit-site-name="'+s.name+'">تعديل</button>'
+      +'<button class="btn btn-sm btn-ghost" data-del-site="'+s.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
+      +'</div></div>'
+    ).join('');
+    document.querySelectorAll('[data-del-site]').forEach(btn=>{
+      btn.addEventListener('click',async()=>{ if(!confirm('حذف الموقع؟')) return; await fsDelete('sites',btn.dataset.delSite); toast('تم الحذف ✓','ok'); loadSitesTab(); });
+    });
+    document.querySelectorAll('[data-edit-site-id]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.getElementById('edit-site-id').value = btn.dataset.editSiteId;
+        document.getElementById('edit-site-name').value = btn.dataset.editSiteName;
+        openModal('modal-edit-site');
+      });
+    });
+  }
+  // Also refresh dropdowns and load job titles
+  fillDropdown('ae-site', S.sites);
+  fillDropdown('ee-site', S.sites);
+  fillDropdown('nu-site', S.sites);
+  loadJobTitles();
+}
+
+async function addSite() {
+  const name=document.getElementById('new-site-inp').value.trim();
+  if (!name) { toast('أدخل اسم الموقع','err'); return; }
+  await fsAdd('sites',{name});
+  toast('تم ✓','ok');
+  document.getElementById('new-site-inp').value='';
+  await loadSitesTab();
+  fillDropdown('ae-site',S.sites);
+}
+
+async function loadJobTitles() {
+  const el = document.getElementById('jobs-list');
+  if (!el) return;
+  el.innerHTML = '<div class="loader"><div class="spin"></div></div>';
+  const jobs = await fsAll('jobTitles');
+  S.jobTitles = jobs.map(j=>j.name).filter(Boolean);
+  if (!jobs.length) { el.innerHTML='<div class="empty">لا توجد مسميات بعد / No job titles yet</div>'; return; }
+  el.innerHTML = jobs.map(j=>
+    '<div class="site-item"><span style="font-size:14px;font-weight:600">💼 '+j.name+'</span>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="btn btn-sm btn-ghost" data-edit-job-id="'+j.id+'" data-edit-job-name="'+j.name+'">تعديل</button>'
+    +'<button class="btn btn-sm btn-ghost" data-del-job="'+j.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
+    +'</div></div>'
+  ).join('');
+  document.querySelectorAll('[data-del-job]').forEach(btn=>{
+    btn.addEventListener('click', async()=>{
+      if (!confirm('حذف المسمى الوظيفي؟')) return;
+      await fsDelete('jobTitles', btn.dataset.delJob);
+      toast('تم الحذف ✓','ok');
+      loadJobTitles();
+    });
+  });
+  document.querySelectorAll('[data-edit-job-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('edit-job-id').value = btn.dataset.editJobId;
+      document.getElementById('edit-job-name').value = btn.dataset.editJobName;
+      openModal('modal-edit-job');
+    });
+  });
+  // Refresh dropdowns
+  fillDropdown('ae-jobtitle', S.jobTitles);
+  fillDropdown('ee-jobtitle', S.jobTitles);
+}
+
+async function addJobTitle() {
+  const name = document.getElementById('new-job-inp').value.trim();
+  if (!name) { toast('أدخل المسمى الوظيفي','err'); return; }
+  // Check duplicate
+  if (S.jobTitles.map(j=>j.toLowerCase()).includes(name.toLowerCase())) {
+    toast('المسمى موجود مسبقاً / Already exists','err'); return;
+  }
+  await fsAdd('jobTitles', { name });
+  toast('تم إضافة المسمى ✓','ok');
+  document.getElementById('new-job-inp').value = '';
+  S.jobTitles.push(name);
+  loadJobTitles();
+}
+
+// ===
+// EDIT SAVE FUNCTIONS
+// ===
+async function saveSiteEdit() {
+  const id   = document.getElementById('edit-site-id').value;
+  const name = document.getElementById('edit-site-name').value.trim();
+  if (!name) { toast('أدخل اسم الموقع','err'); return; }
+  await fsUpdate('sites', id, { name });
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit-site');
+  loadSitesTab();
+}
+
+async function saveJobEdit() {
+  const id   = document.getElementById('edit-job-id').value;
+  const name = document.getElementById('edit-job-name').value.trim();
+  if (!name) { toast('أدخل المسمى الوظيفي','err'); return; }
+  await fsUpdate('jobTitles', id, { name });
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit-job');
+  loadJobTitles();
+}
+
+async function saveUserEdit() {
+  const id   = document.getElementById('edit-user-id').value;
+  const pass = document.getElementById('edit-user-pass').value.trim();
+  const role = document.getElementById('edit-user-role').value;
+  const site = document.getElementById('edit-user-site').value;
+  const updates = { role, site };
+  if (pass) updates.password = pass; // only update password if provided
+  await fsUpdate('users', id, updates);
+  toast('تم التعديل ✓','ok');
+  closeModal('modal-edit-user');
+  loadUsersTab();
+}
+
+async function loadUsersTab() {
+  loading('users-list');
+  const users = await fsAll('users');
+  if (!users.length) { document.getElementById('users-list').innerHTML='<div class="empty">لا يوجد مستخدمون</div>'; return; }
+  // Store users map for edit lookup
+  window._usersMap = {};
+  users.forEach(u => { window._usersMap[u.id] = u; });
+
+  document.getElementById('users-list').innerHTML = users.map(u=>
+    '<div class="site-item"><div><div style="font-size:14px;font-weight:700">ه  '+u.username+'</div>'
+    +'<div style="font-size:11px;color:var(--txt2)">'+(ROLES[u.role]||u.role)+(u.site&&u.site!=='ALL'?' · '+u.site:'')+'</div></div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="btn btn-sm btn-ghost" data-edit-uid="'+u.id+'">تعديل</button>'
+    +'<button class="btn btn-sm btn-ghost" data-del-user="'+u.id+'" style="color:var(--red);border-color:var(--red)">حذف</button>'
+    +'</div></div>'
+  ).join('');
+  document.querySelectorAll('[data-del-user]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{ if(!confirm('حذف المستخدم؟')) return; await fsDelete('users',btn.dataset.delUser); toast('تم الحذف ✓','ok'); loadUsersTab(); });
+  });
+  document.querySelectorAll('[data-edit-uid]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const u = window._usersMap[btn.dataset.editUid] || {};
+      document.getElementById('edit-user-id').value   = u.id;
+      document.getElementById('edit-user-name-lbl').textContent = u.username;
+      document.getElementById('edit-user-pass').value = '';
+      document.getElementById('edit-user-role').value = u.role;
+      // Populate site dropdown
+      const sel = document.getElementById('edit-user-site');
+      sel.innerHTML = '<option value="ALL">ALL</option>' + S.sites.map(s=>'<option value="'+s+'"'+(s===u.site?' selected':'')+'>'+s+'</option>').join('');
+      sel.value = u.site||'ALL';
+      openModal('modal-edit-user');
+    });
+  });
+}
+
+async function addUser() {
+  const username=document.getElementById('nu-username').value.trim();
+  const password=document.getElementById('nu-password').value.trim();
+  const role=document.getElementById('nu-role').value;
+  const site=document.getElementById('nu-site').value;
+  if (!username||!password||!role) { toast('أكمل جميع الحقول','err'); return; }
+  await fsAdd('users',{username,password,role,site:site||'ALL'});
+  toast('تم إضافة المستخدم ✓','ok');
+  ['nu-username','nu-password'].forEach(id=>document.getElementById(id).value='');
+  loadUsersTab();
+}
+
+// ===
+// MONTH-END
+// ===
+async function runMonthEnd() {
+  const now=new Date();
+  let m=now.getMonth(), y=now.getFullYear();
+  if(m===0){m=12;y--;} // close previous month
+  const mk=monthKey(m,y);
+  if(!confirm('إغلاق شهر '+MONTHS_SHORT[m]+' '+y+'؟')) return;
+
+  const emps=S.employees;
+  const txSnap=await db.collection('transactions').where('monthKey','==',mk).get();
+  const txAll=txSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const cfSnap=await db.collection('carryForward').where('monthKey','==',mk).get();
+  const cfAll=cfSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // Next month key
+  let nm=m+1, ny=y; if(nm>12){nm=1;ny++;}
+  const nmk=monthKey(nm,ny);
+
+  const batch=db.batch();
+  let carried=0;
+  emps.forEach(emp=>{
+    const empTx=txAll.filter(t=>t.iqamaNo===emp.iqamaNo);
+    const cf=cfAll.find(c=>c.iqamaNo===emp.iqamaNo);
+    const dues=calcDuesFromTx(empTx,cf?.amount||0);
+    if(dues.totalDues>0){
+      const ref=db.collection('carryForward').doc();
+      batch.set(ref,{iqamaNo:emp.iqamaNo,name:emp.name,monthKey:nmk,month:nm,year:ny,amount:dues.totalDues,closedFrom:mk,createdAt:new Date().toISOString()});
+      carried++;
+    }
+  });
+  await batch.commit();
+  toast('تم إغلاق الشهر. ترحيل: '+carried+' موظف','ok');
+}
+
+// ===
+// BOOT
+// ===
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(S.theme);
+
+  // Login
+  document.getElementById('login-btn').addEventListener('click', doLogin);
+  document.getElementById('inp-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+  // Theme toggle
+  document.getElementById('theme-toggle').addEventListener('click', ()=>applyTheme(S.theme==='dark'?'light':'dark'));
+
+  // Logout
+  ['btn-logout','btn-logout2'].forEach(id=>document.getElementById(id)?.addEventListener('click',doLogout));
+
+  // Back
+  document.getElementById('btn-back').addEventListener('click',()=>{ show('screen-main'); switchTab('list'); loadEmployees(); });
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+  // Modals close
+  document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.dataset.close)));
+  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+
+  // Add employee
+  document.getElementById('btn-add-emp').addEventListener('click', openAddModal);
+  document.getElementById('btn-save-emp').addEventListener('click', saveEmployee);
+  document.getElementById('btn-save-edit').addEventListener('click', saveEdit);
+
+  // Search & Site Filter
+  document.getElementById('search-box').addEventListener('input', ()=>{
+    const emps = S.user?.role==='site_head' ? S.employees.filter(e=>e.site===S.user.site) : S.employees;
+    renderEmpList(emps);
+  });
+  document.getElementById('site-filter')?.addEventListener('change', ()=>{
+    const emps = S.user?.role==='site_head' ? S.employees.filter(e=>e.site===S.user.site) : S.employees;
+    renderEmpList(emps);
+  });
+  document.getElementById('btn-clear-filter')?.addEventListener('click', ()=>{
+    document.getElementById('search-box').value = '';
+    const sf = document.getElementById('site-filter');
+    if (sf) sf.value = 'ALL';
+    const emps = S.user?.role==='site_head' ? S.employees.filter(e=>e.site===S.user.site) : S.employees;
+    renderEmpList(emps);
+  });
+
+  // Dashboard controls
+  document.getElementById('dash-prev').addEventListener('click',()=>{ S.dashMonth--; if(S.dashMonth<1){S.dashMonth=12;S.dashYear--;} updateMonthLbl(); loadDashboard(); });
+  document.getElementById('dash-next').addEventListener('click',()=>{ S.dashMonth++; if(S.dashMonth>12){S.dashMonth=1;S.dashYear++;} updateMonthLbl(); loadDashboard(); });
+  document.getElementById('dash-site-filter').addEventListener('change', loadDashboard);
+  document.getElementById('btn-csv').addEventListener('click', exportCSV);
+  document.getElementById('btn-wa').addEventListener('click', shareWA);
+  document.getElementById('btn-print').addEventListener('click', printReport);
+  document.getElementById('btn-month-end').addEventListener('click', runMonthEnd);
+
+  // Sites & Job Titles
+  document.getElementById('btn-add-site').addEventListener('click', addSite);
+  document.getElementById('btn-add-job').addEventListener('click', addJobTitle);
+
+  // Users
+  document.getElementById('btn-add-user').addEventListener('click', addUser);
+  document.getElementById('btn-save-site-edit').addEventListener('click', saveSiteEdit);
+  document.getElementById('btn-save-job-edit').addEventListener('click', saveJobEdit);
+  document.getElementById('btn-save-user-edit').addEventListener('click', saveUserEdit);
+  fillDropdown('nu-site', [], '');
+
+  // PWA
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+});
+
+
+
+
+</script>
+<!-- PAYSLIP MODAL -->
+<div class="overlay" id="modal-payslip">
+  <div class="sheet" style="max-height:95vh">
+    <div class="sheet-title">
+      <span>بيان راتب / Payslip</span>
+      <button class="sheet-close" data-close="modal-payslip">×</button>
+    </div>
+    <div id="payslip-content"></div>
+    <button class="btn btn-full btn-ghost" style="margin-top:14px" onclick="window.print()">🖨️ طباعة / Print</button>
+  </div>
+</div>
+
 </body>
 </html>
